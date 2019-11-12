@@ -1,7 +1,6 @@
 # Intel Edge Insights Web Visualizer
-Web Visualizer for the EIS platform.
+Web Visualizer ia a web based app to view the classified images/metadata coming out of EIS.
 
-### 1. Running as a docker container
 
 #### Steps to build and run viualizer
 
@@ -19,7 +18,7 @@ Web Visualizer for the EIS platform.
   * Visualizer is tested on Chrome Browser. Its better to use chrome browser.
   * 
 
-  PROD Mode:
+ #### PROD Mode:
     * Import 'ca_certificate.pem' from 'docker_setup/provision/Certificates/ca' Directory to your Browser Certifcates.
 
       ##### Steps to Import Certificates
@@ -38,7 +37,7 @@ Web Visualizer for the EIS platform.
     * Login Page
         You should use your defined username & password in etcd config.
 
-  DEV mode
+  #### DEV mode
 
     * Goto Browser
         http://localhost:5000
