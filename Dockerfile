@@ -35,8 +35,6 @@ COPY --from=common ${GO_WORK_DIR}/common/cmake ${PY_WORK_DIR}/common/cmake
 COPY --from=common /usr/local/lib /usr/local/lib
 COPY --from=common /usr/local/lib/python3.6/dist-packages/ /usr/local/lib/python3.6/dist-packages
 
-COPY web_visualizer.py .
+COPY . .
 
-COPY templates templates
-
-ENTRYPOINT ["python3.6", "web_visualizer.py"]
+ENTRYPOINT ["python3.6", "web_visualizer.py", "-l"]

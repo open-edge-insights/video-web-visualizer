@@ -129,12 +129,12 @@ class SubscriberCallback:
 
                 # Draw labels
                 for l in d['tensor']:
-                    if l['label'] is not None:
+                    if l['label_id'] is not None:
                         pos = (x1, y1 - c)
-                        c += 20
-                        label = l['label']
+                        c += 10
+                        label = self.labels[str(l['label_id'])]
                         cv2.putText(frame, label, pos, cv2.FONT_HERSHEY_DUPLEX,
-                                0.75, self.bad_color, 2, cv2.LINE_AA)
+                                0.5, self.bad_color, 2, cv2.LINE_AA)
 
         # Draw defects
         if 'defects' in results:
@@ -284,7 +284,13 @@ def get_image_data(topic_name):
     logger = configure_logging(globalConfig['PY_LOG_LEVEL'].upper(),
                                __name__,dev_mode)
 
-    labels = None
+    # If user provides labels, read them in
+    if args.labels is not None:
+        assert_exists(args.labels)
+        with open(args.labels, 'r') as f:
+            labels = json.load(f)
+    else:
+        labels = None
 
     visualizerConfig = config_client.GetConfig("/" + app_name + "/config")
     jsonConfig = json.loads(visualizerConfig)
@@ -347,6 +353,16 @@ def get_topic_list():
         topic = topic.strip()
         finaltopicList.append(topic)
     return finaltopicList
+
+
+def assert_exists(path):
+    """Assert given path exists.
+
+    :param path: Path to assert
+    :type: str
+    """
+    assert os.path.exists(path), 'Path: {} does not exist'.format(path)
+
 
 
 @app.route('/')
