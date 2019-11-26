@@ -18,7 +18,20 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
   * Visualizer is tested on Chrome Browser. Its better to use chrome browser.
   * 
 
- #### PROD Mode:
+  #### DEV mode
+    * Goto Browser
+        http://localhost:5000
+
+  #### PROD Mode:
+    * Add "WebVisualizer" app name in the `Clients` env variable for `ia_video_analytics` and `ia_video_ingestion`
+      container
+      Eg: For `ia_video_analytics` container in environment section:
+      ```
+      ia_video_analytics:
+        environment:
+          # MessageBus Endpoint Configuration
+          Clients : "Visualizer,FactoryControlApp,OpcuaExport,ImageStore,InfluxDBConnector,RestDataExport,WebVisualizer"
+      ```    
     * Import 'ca_certificate.pem' from 'docker_setup/provision/Certificates/ca' Directory to your Browser Certifcates.
 
       ##### Steps to Import Certificates
@@ -36,11 +49,6 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 
     * Login Page
         You should use your defined username & password in etcd config.
-
-  #### DEV mode
-
-    * Goto Browser
-        http://localhost:5000
 -----
 **NOTE**:
 1. The admin has to make sure all the necessary config is set in etcd before starting the web visualizer.
