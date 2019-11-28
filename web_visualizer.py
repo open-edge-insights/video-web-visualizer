@@ -17,7 +17,8 @@ from util.util import Util
 from util.msgbusutil import MsgBusUtil
 import eis.msgbus as mb
 from util.log import configure_logging, LOG_LEVELS
-from flask import Flask, render_template, Response, redirect, request, session, abort
+from flask import Flask, render_template, Response, redirect, request, \
+                         session, abort
 import ssl
 
 TEXT = 'Disconnected'
@@ -26,6 +27,7 @@ TEXTFONT = cv2.FONT_HERSHEY_PLAIN
 TEXTCOLOR = (255, 255, 255)
 
 app = Flask(__name__)
+
 
 class SubscriberCallback:
     """Object for the databus callback to wrap needed state variables for the
@@ -121,8 +123,8 @@ class SubscriberCallback:
                 x2 = x1 + d['width']
                 y2 = y1 + d['height']
 
-                tl = tuple([x1,y1])
-                br = tuple([x2,y2])
+                tl = tuple([x1, y1])
+                br = tuple([x2, y2])
 
                 # Draw bounding box
                 cv2.rectangle(frame, tl, br, self.bad_color, 2)
@@ -134,7 +136,7 @@ class SubscriberCallback:
                         c += 10
                         label = self.labels[str(l['label_id'])]
                         cv2.putText(frame, label, pos, cv2.FONT_HERSHEY_DUPLEX,
-                                0.5, self.bad_color, 2, cv2.LINE_AA)
+                                    0.5, self.bad_color, 2, cv2.LINE_AA)
 
         # Draw defects
         if 'defects' in results:
@@ -170,7 +172,7 @@ class SubscriberCallback:
                 outline_color = self.good_color
 
             frame = cv2.copyMakeBorder(frame, 5, 5, 5, 5, cv2.BORDER_CONSTANT,
-                                        value=outline_color)
+                                       value=outline_color)
 
         # Display information about frame
         (dx, dy) = (20, 10)
@@ -223,9 +225,8 @@ class SubscriberCallback:
                 else:
                     self.logger.info(f'Classifier_results: {results}')
             else:
-                if self.profiling is True:
-                    self.add_profile_data(data)
-                self.logger.info(f'Classifier_results: {data}')
+                self.logger.debug(f'Non Image Data Subscription\
+                                 : Classifier_results: {data}')
 
 
 def parse_args():
@@ -261,7 +262,8 @@ def msg_bus_subscriber(topic_config_list, queueDict, logger, jsonConfig,
 def get_blank_image(text):
     blankImageShape = (130, 200, 3)
     blankImage = np.zeros(blankImageShape, dtype=np.uint8)
-    cv2.putText(blankImage, text, TEXTPOSITION, TEXTFONT, 1.5, TEXTCOLOR, 2, cv2.LINE_AA)
+    cv2.putText(blankImage, text, TEXTPOSITION,
+                TEXTFONT, 1.5, TEXTCOLOR, 2, cv2.LINE_AA)
     ret, jpeg = cv2.imencode('.jpg', blankImage)
     finalImage = jpeg.tobytes()
     return finalImage
@@ -275,14 +277,14 @@ def get_image_data(topic_name):
 
     app_name = os.environ["AppName"]
     conf = Util.get_crypto_dict(app_name)
-        
+
     cfg_mgr = ConfigManager()
     config_client = cfg_mgr.get_config_client("etcd", conf)
 
     globalenvConfig = config_client.GetConfig("/GlobalEnv/")
     globalConfig = json.loads(globalenvConfig)
     logger = configure_logging(globalConfig['PY_LOG_LEVEL'].upper(),
-                               __name__,dev_mode)
+                               __name__, dev_mode)
 
     # If user provides labels, read them in
     if args.labels is not None:
@@ -311,7 +313,8 @@ def get_image_data(topic_name):
 
     topic_config_list = []
     queueDict[topic_name] = queue.Queue(maxsize=10)
-    msgbus_cfg = MsgBusUtil.get_messagebus_config(topic_name, "sub", subDict[topic_name],
+    msgbus_cfg = MsgBusUtil.get_messagebus_config(topic_name,
+                                                  "sub", subDict[topic_name],
                                                   config_client, dev_mode)
 
     mode_address = os.environ[topic_name + "_cfg"].split(",")
@@ -326,7 +329,7 @@ def get_image_data(topic_name):
     try:
         finalImage = get_blank_image(TEXT)
         msg_bus_subscriber(topic_config_list, queueDict, logger,
-                            jsonConfig, labels)
+                           jsonConfig, labels)
         while True:
             if topic_name in queueDict.keys():
                 if not queueDict[topic_name].empty():
@@ -338,7 +341,8 @@ def get_image_data(topic_name):
                 finalImage = get_blank_image(msg_txt)
 
             yield (b'--frame\r\n'
-                        b'Content-Type: image/jpeg\r\n\r\n' + finalImage + b'\r\n\r\n')
+                   b'Content-Type: image/jpeg\r\n\r\n' + finalImage +
+                   b'\r\n\r\n')
     except KeyboardInterrupt:
         logger.info('Quitting...')
     except Exception:
@@ -364,14 +368,13 @@ def assert_exists(path):
     assert os.path.exists(path), 'Path: {} does not exist'.format(path)
 
 
-
 @app.route('/')
 def index():
     dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
     """Video streaming home page."""
     if not session.get('logged_in'):
         if dev_mode:
-            session['logged_in'] = True    
+            session['logged_in'] = True
             return render_template('index.html')
         else:
             return render_template('login.html')
@@ -394,13 +397,14 @@ def render_image(topic_name):
             return render_template('login.html')
         else:
             return Response(get_image_data(topic_name),
-                            mimetype='multipart/x-mixed-replace; boundary=frame')
+                            mimetype='multipart/x-mixed-replace;\
+                                      boundary=frame')
     else:
         return Response("Invalid Request")
 
 
 @app.route('/login', methods=['GET', 'POST'])
-def login():    
+def login():
     if request.method == 'GET':
         if not session.get('logged_in'):
             return render_template('login.html')
@@ -409,7 +413,7 @@ def login():
 
     if request.method == 'POST':
         app_name = os.environ["AppName"]
-        conf = Util.get_crypto_dict(app_name)    
+        conf = Util.get_crypto_dict(app_name)
         cfg_mgr = ConfigManager()
         config_client = cfg_mgr.get_config_client("etcd", conf)
         visualizerConfig = config_client.GetConfig("/" + app_name + "/config")
@@ -419,7 +423,8 @@ def login():
         if dev_mode:
             session['logged_in'] = True
         else:
-            if request.form['username'] == jsonConfig['username'] and request.form['password'] == jsonConfig['password']:
+            if request.form['username'] == jsonConfig['username'] \
+               and request.form['password'] == jsonConfig['password']:
                 session['logged_in'] = True
                 return index()
             else:
@@ -434,12 +439,13 @@ def logout():
         session['logged_in'] = False
     return login()
 
+
 if __name__ == '__main__':
 
     # Parse command line arguments
     args = parse_args()
     app.secret_key = os.urandom(24)
-    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)  
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
     app_name = os.environ["AppName"]
     conf = Util.get_crypto_dict(app_name)
@@ -457,21 +463,21 @@ if __name__ == '__main__':
         flaskDebug = False
 
     if dev_mode:
-        app.run(host='0.0.0.0', port=jsonConfig['port'], debug=flaskDebug, threaded=True)
+        app.run(host='0.0.0.0', port=jsonConfig['port'],
+                debug=flaskDebug, threaded=True)
     else:
         server_cert = config_client.GetConfig("/" + app_name + "/server_cert")
         server_key = config_client.GetConfig("/" + app_name + "/server_key")
 
-        #Since Python SSL Load Cert Chain Method is not having option to load 
-        #Cert from Variable. So for now we are going below method
+        # Since Python SSL Load Cert Chain Method is not having option to load
+        # Cert from Variable. So for now we are going below method
         with open('server_cert.pem', 'w') as f:
             f.write(server_cert)
-        
         with open('server_key.pem', 'w') as f:
             f.write(server_key)
 
         context.load_cert_chain("server_cert.pem", "server_key.pem")
         os.remove("server_cert.pem")
         os.remove("server_key.pem")
-        app.run(host='0.0.0.0', port=jsonConfig['port'], debug=flaskDebug, threaded=True, ssl_context=context)
-
+        app.run(host='0.0.0.0', port=jsonConfig['port'],
+                debug=flaskDebug, threaded=True, ssl_context=context)
