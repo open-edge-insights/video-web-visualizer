@@ -134,9 +134,12 @@ class SubscriberCallback:
                     if l['label_id'] is not None:
                         pos = (x1, y1 - c)
                         c += 10
-                        label = self.labels[str(l['label_id'])]
-                        cv2.putText(frame, label, pos, cv2.FONT_HERSHEY_DUPLEX,
+                        if str(l['label_id']) in self.labels:
+                            label = self.labels[str(l['label_id'])]
+                            cv2.putText(frame, label, pos, cv2.FONT_HERSHEY_DUPLEX,
                                     0.5, self.bad_color, 2, cv2.LINE_AA)
+                        else:
+                            self.logger.error("Label id:{} not found".format(l['label_id']))
 
         # Draw defects
         if 'defects' in results:
@@ -160,10 +163,13 @@ class SubscriberCallback:
 
                     # The label is the "type" key of the defect, which
                     #  is converted to a string for getting from the labels
-                    label = self.labels[str(d['type'])]
-
-                    cv2.putText(frame, label, pos, cv2.FONT_HERSHEY_DUPLEX,
+                    if str(d['type']) in self.labels:
+                        label = self.labels[str(d['type'])]
+                        cv2.putText(frame, label, pos, cv2.FONT_HERSHEY_DUPLEX,
                                 0.5, self.bad_color, 2, cv2.LINE_AA)
+                    else:
+                        self.logger.error("Label id:{} not found".format(d['type']))
+
 
             # Draw border around frame if has defects or no defects
             if results['defects']:
