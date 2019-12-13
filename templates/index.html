@@ -3,15 +3,15 @@
 <title>EdgeInsights - Visualizer</title>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-{{ nonce }}';style-src 'self' 'unsafe-inline';">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" nonce={{nonce}}>
+<script src="{{ url_for('static', filename='js/jquery.min.js') }}" nonce={{nonce}}></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}" nonce={{nonce}}></script>
 <style>
 .modal-full {min-width: 100%;margin: 10;}
 .modal-full .modal-content {min-height: 100vh;}
 </style>
-<script>
+<script nonce={{nonce}}>
     topics_list = []
     var imgId = 0;
     $.get("/topics",
@@ -23,7 +23,7 @@
           topics_list.push(data)
         }
         // alert(topics_list)
-        var mainDiv = $("#main");
+        var mainDiv = $("#main");        
         for (i = 0; i < topics_list.length; i++) {
           var imgTag = $("<div class='col-md-4'>\
                         <img id='myImg-"+imgId+"'\

@@ -12,21 +12,35 @@ import argparse
 import numpy as np
 from distutils.util import strtobool
 import threading
+import time
+import random
 from libs.ConfigManager import ConfigManager
 from util.util import Util
 from util.msgbusutil import MsgBusUtil
 import eis.msgbus as mb
 from util.log import configure_logging, LOG_LEVELS
 from flask import Flask, render_template, Response, redirect, request, \
-                         session, abort
+                         session, abort, escape
+from jinja2 import Environment, select_autoescape, FileSystemLoader
 import ssl
+import string
+import secrets
 
 TEXT = 'Disconnected'
 TEXTPOSITION = (10, 110)
 TEXTFONT = cv2.FONT_HERSHEY_PLAIN
 TEXTCOLOR = (255, 255, 255)
+MAX_FAILED_LOGIN_ATTEMPTS = 3
+number_of_login_attempts = 0
 
+NONCE = secrets.token_urlsafe(8)
 app = Flask(__name__)
+loader = FileSystemLoader(searchpath = "templates/")
+
+# Setting default auto-escape for all templates
+env = Environment(loader=loader, autoescape=select_autoescape(
+                  enabled_extensions=('html'),
+                  default_for_string=True,))
 
 
 class SubscriberCallback:
@@ -374,6 +388,14 @@ def assert_exists(path):
     assert os.path.exists(path), 'Path: {} does not exist'.format(path)
 
 
+def set_header_tags(response):
+    """Local function to set secure response tags"""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
+
 @app.route('/')
 def index():
     dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
@@ -381,17 +403,21 @@ def index():
     if not session.get('logged_in'):
         if dev_mode:
             session['logged_in'] = True
-            return render_template('index.html')
+            response = app.make_response(render_template('index.html', nonce=NONCE))
+            return set_header_tags(response)
         else:
-            return render_template('login.html')
+            response = app.make_response(render_template('login.html', nonce=NONCE))
+            return set_header_tags(response)
     else:
-        return render_template('index.html')
+        response = app.make_response(render_template('index.html', nonce=NONCE))
+        return set_header_tags(response)
 
 
 @app.route('/topics', methods=['GET'])
 def return_topics():
     if not session.get('logged_in'):
-        return render_template('login.html')
+        response = app.make_response(render_template('login.html', nonce=NONCE))
+        return set_header_tags(response)
     else:
         return Response(str(get_topic_list()))
 
@@ -400,7 +426,8 @@ def return_topics():
 def render_image(topic_name):
     if topic_name in get_topic_list():
         if not session.get('logged_in'):
-            return render_template('login.html')
+            response = app.make_response(render_template('login.html', nonce=NONCE))
+            return set_header_tags(response)
         else:
             return Response(get_image_data(topic_name),
                             mimetype='multipart/x-mixed-replace;\
@@ -411,13 +438,15 @@ def render_image(topic_name):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    assert len(request.url) < 2000, "Request URL size exceeds browser limit"
     if request.method == 'GET':
         if not session.get('logged_in'):
-            return render_template('login.html')
+            response = app.make_response(render_template('login.html', nonce=NONCE))
+            return set_header_tags(response)
         else:
             return index()
 
-    if request.method == 'POST':
+    elif request.method == 'POST':
         app_name = os.environ["AppName"]
         conf = Util.get_crypto_dict(app_name)
         cfg_mgr = ConfigManager()
@@ -426,15 +455,26 @@ def login():
 
         jsonConfig = json.loads(visualizerConfig)
         dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
+        # global MAX_FAILED_LOGIN_ATTEMPTS
+        global number_of_login_attempts
         if dev_mode:
             session['logged_in'] = True
         else:
             if request.form['username'] == jsonConfig['username'] \
                and request.form['password'] == jsonConfig['password']:
                 session['logged_in'] = True
+                number_of_login_attempts = 0
                 return index()
             else:
-                return render_template('login.html', Message="Invalid Login")
+                response = app.make_response(render_template('login.html', nonce=NONCE, Message="Invalid Login"))
+                number_of_login_attempts += 1
+                if(number_of_login_attempts == MAX_FAILED_LOGIN_ATTEMPTS):
+                    response = app.make_response(render_template('login.html', nonce=NONCE, Message="Invalid Login. Retry after a while."))
+                    time.sleep(random.randint(3,10))
+                    number_of_login_attempts = 0
+                return set_header_tags(response)
+    else:
+        return Response("Only GET and POST methods are supported.")
     return index()
 
 

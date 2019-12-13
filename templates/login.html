@@ -4,11 +4,11 @@
 <title>Login Page</title>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-{{ nonce }}';style-src 'self' 'unsafe-inline';">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" nonce={{nonce}}>
+<script src="{{ url_for('static', filename='js/jquery.min.js') }}" nonce={{nonce}}></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}" nonce={{nonce}}></script>
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-<script src="{{ url_for('static', filename='js/jquery.min.js')}}"></script>
-<script src="{{ url_for('static', filename='js/bootstrap.min.js')}}"></script>
-<!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css')}}"> -->
 </head>
 <body>
 
@@ -18,7 +18,7 @@
         <h1>Industrial Edge Insights - Visualizer</h1>        
     </div>
     <center><h2>Login Page</h2></center>
-    <form action="/login" method="POST">
+    <form action="/login" method="POST" autocomplete="off">
         <div class="form-group">
             <label for="Username">Username</label>
             <input type="username" class="form-control" name="username" placeholder="Username">
