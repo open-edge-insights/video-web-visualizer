@@ -23,15 +23,6 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
         http://localhost:5000
 
   #### PROD Mode:
-    * Add "WebVisualizer" app name in the `Clients` env variable for `ia_video_analytics` and `ia_video_ingestion`
-      container
-      Eg: For `ia_video_analytics` container in environment section:
-      ```
-      ia_video_analytics:
-        environment:
-          # MessageBus Endpoint Configuration
-          Clients : "Visualizer,FactoryControlApp,OpcuaExport,ImageStore,InfluxDBConnector,RestDataExport,WebVisualizer"
-      ```    
     * Import 'ca_certificate.pem' from 'docker_setup/provision/Certificates/ca' Directory to your Browser Certifcates.
 
       ##### Steps to Import Certificates
