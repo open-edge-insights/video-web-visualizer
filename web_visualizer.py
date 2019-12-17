@@ -35,7 +35,7 @@ number_of_login_attempts = 0
 
 NONCE = secrets.token_urlsafe(8)
 app = Flask(__name__)
-loader = FileSystemLoader(searchpath = "templates/")
+loader = FileSystemLoader(searchpath="templates/")
 
 # Setting default auto-escape for all templates
 env = Environment(loader=loader, autoescape=select_autoescape(
@@ -150,10 +150,13 @@ class SubscriberCallback:
                         c += 10
                         if str(l['label_id']) in self.labels:
                             label = self.labels[str(l['label_id'])]
-                            cv2.putText(frame, label, pos, cv2.FONT_HERSHEY_DUPLEX,
-                                    0.5, self.bad_color, 2, cv2.LINE_AA)
+                            cv2.putText(frame, label, pos,
+                                        cv2.FONT_HERSHEY_DUPLEX,
+                                        0.5, self.bad_color, 2,
+                                        cv2.LINE_AA)
                         else:
-                            self.logger.error("Label id:{} not found".format(l['label_id']))
+                            self.logger.error("Label id:{}\
+                                              not found".format(l['label_id']))
 
         # Draw defects
         if 'defects' in results:
@@ -179,11 +182,12 @@ class SubscriberCallback:
                     #  is converted to a string for getting from the labels
                     if str(d['type']) in self.labels:
                         label = self.labels[str(d['type'])]
-                        cv2.putText(frame, label, pos, cv2.FONT_HERSHEY_DUPLEX,
-                                0.5, self.bad_color, 2, cv2.LINE_AA)
+                        cv2.putText(frame, label, pos,
+                                    cv2.FONT_HERSHEY_DUPLEX,
+                                    0.5, self.bad_color, 2, cv2.LINE_AA)
                     else:
-                        self.logger.error("Label id:{} not found".format(d['type']))
-
+                        self.logger.error("Label id:{} \
+                                          not found".format(d['type']))
 
             # Draw border around frame if has defects or no defects
             if results['defects']:
@@ -393,8 +397,11 @@ def set_header_tags(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-XSS-Protection'] = '1; mode=block'
-    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000;\
+                                                    includeSubDomains'
+    response.headers['Content-Type'] = 'text/html; charset=utf-8'
     return response
+
 
 @app.route('/')
 def index():
@@ -403,20 +410,24 @@ def index():
     if not session.get('logged_in'):
         if dev_mode:
             session['logged_in'] = True
-            response = app.make_response(render_template('index.html', nonce=NONCE))
+            response = app.make_response(render_template('index.html',
+                                                         nonce=NONCE))
             return set_header_tags(response)
         else:
-            response = app.make_response(render_template('login.html', nonce=NONCE))
+            response = app.make_response(render_template('login.html',
+                                                         nonce=NONCE))
             return set_header_tags(response)
     else:
-        response = app.make_response(render_template('index.html', nonce=NONCE))
+        response = app.make_response(render_template('index.html',
+                                                     nonce=NONCE))
         return set_header_tags(response)
 
 
 @app.route('/topics', methods=['GET'])
 def return_topics():
     if not session.get('logged_in'):
-        response = app.make_response(render_template('login.html', nonce=NONCE))
+        response = app.make_response(render_template('login.html',
+                                                     nonce=NONCE))
         return set_header_tags(response)
     else:
         return Response(str(get_topic_list()))
@@ -426,7 +437,8 @@ def return_topics():
 def render_image(topic_name):
     if topic_name in get_topic_list():
         if not session.get('logged_in'):
-            response = app.make_response(render_template('login.html', nonce=NONCE))
+            response = app.make_response(render_template('login.html',
+                                                         nonce=NONCE))
             return set_header_tags(response)
         else:
             return Response(get_image_data(topic_name),
@@ -441,7 +453,8 @@ def login():
     assert len(request.url) < 2000, "Request URL size exceeds browser limit"
     if request.method == 'GET':
         if not session.get('logged_in'):
-            response = app.make_response(render_template('login.html', nonce=NONCE))
+            response = app.make_response(render_template('login.html',
+                                                         nonce=NONCE))
             return set_header_tags(response)
         else:
             return index()
@@ -466,12 +479,24 @@ def login():
                 number_of_login_attempts = 0
                 return index()
             else:
-                response = app.make_response(render_template('login.html', nonce=NONCE, Message="Invalid Login"))
+                response = app.make_response(render_template('login.html',
+                                                             nonce=NONCE,
+                                                             Message="Invalid\
+                                                             Login"))
                 number_of_login_attempts += 1
                 if(number_of_login_attempts == MAX_FAILED_LOGIN_ATTEMPTS):
-                    response = app.make_response(render_template('login.html', nonce=NONCE, Message="Invalid Login. Retry after a while."))
-                    time.sleep(random.randint(3,10))
+                    response = app.make_response(render_template('login.html',
+                                                                 nonce=NONCE,
+                                                                 Message="\
+                                                                 Invalid\
+                                                                 Login. Retry\
+                                                                 after a while\
+                                                                 ."))
+                    time.sleep(random.randint(3, 10))
                     number_of_login_attempts = 0
+                # Random sleep between 0.1 to 0.5secs on InvalidLogin response.
+                # SDLE
+                time.sleep(random.uniform(0.1, 0.5))
                 return set_header_tags(response)
     else:
         return Response("Only GET and POST methods are supported.")
