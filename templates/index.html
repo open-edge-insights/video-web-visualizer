@@ -3,11 +3,11 @@
 <title>EdgeInsights - Visualizer</title>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-{{ nonce }}';style-src 'self' 'unsafe-inline';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-{{ nonce }}';style-src 'self' 'nonce-{{ nonce }}';">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" nonce={{nonce}}>
 <script src="{{ url_for('static', filename='js/jquery.min.js') }}" nonce={{nonce}}></script>
 <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}" nonce={{nonce}}></script>
-<style>
+<style nonce={{nonce}}>
 .modal-full {min-width: 100%;margin: 10;}
 .modal-full .modal-content {min-height: 100vh;}
 </style>
@@ -29,7 +29,7 @@
                         <img id='myImg-"+imgId+"'\
                         src='/"+topics_list[i]+"'\
                         alt='"+topics_list[i]+"' class='img-rounded'\
-                        style='width:100%;max-width:300px'></img>\
+                        width='300'></img>\
                         <br><center><label>"+topics_list[i]+"</label></center></div>")
           mainDiv.append(imgTag)
           imgId++;
