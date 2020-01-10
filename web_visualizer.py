@@ -516,6 +516,7 @@ if __name__ == '__main__':
     # Parse command line arguments
     args = parse_args()
     app.secret_key = os.urandom(24)
+    app.config.update(SESSION_COOKIE_SECURE=True)
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
     app_name = os.environ["AppName"]
