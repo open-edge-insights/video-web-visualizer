@@ -516,7 +516,6 @@ if __name__ == '__main__':
     # Parse command line arguments
     args = parse_args()
     app.secret_key = os.urandom(24)
-    app.config.update(SESSION_COOKIE_SECURE=True)
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
     app_name = os.environ["AppName"]
@@ -538,9 +537,12 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', port=jsonConfig['port'],
                 debug=flaskDebug, threaded=True)
     else:
+        # For Secure Session Cookie
+        app.config.update(SESSION_COOKIE_SECURE=True)
+        
         server_cert = config_client.GetConfig("/" + app_name + "/server_cert")
         server_key = config_client.GetConfig("/" + app_name + "/server_key")
-
+ 
         # Since Python SSL Load Cert Chain Method is not having option to load
         # Cert from Variable. So for now we are going below method
         with open('server_cert.pem', 'w') as f:
