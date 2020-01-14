@@ -16,7 +16,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 * Running Visualizer in Browser
 
   * Visualizer is tested on Chrome Browser. Its better to use chrome browser.
-  * 
+  * WebVisualizer Currently supports Only **6** parallel streams in the chrome browser per instance.
 
   #### DEV mode
     * Goto Browser
