@@ -48,9 +48,9 @@ class SubscriberCallback:
     callback in to EIS.
     """
 
-    def __init__(self, topicQueueDict, logger,
-                 labels=None, good_color=(0, 255, 0),
-                 bad_color=(0, 0, 255), dir_name=None, display=None):
+    def __init__(self, topicQueueDict, logger, good_color=(0, 255, 0),
+                 bad_color=(0, 0, 255), dir_name=None, display=None,
+                 labels=None):
         """Constructor
 
         :param frame_queue: Queue to put frames in as they become available
@@ -93,7 +93,7 @@ class SubscriberCallback:
                 else:
                     self.logger.warning("Dropping frames as the queue is full")
 
-    def draw_defect(self, results, blob, topic):
+    def draw_defect(self, results, blob, topic, stream_label=None):
         """Identify the defects and draw boxes on the frames
 
         :param results: Metadata of frame received from message bus.
@@ -148,8 +148,9 @@ class SubscriberCallback:
                     if l['label_id'] is not None:
                         pos = (x1, y1 - c)
                         c += 10
-                        if str(l['label_id']) in self.labels:
-                            label = self.labels[str(l['label_id'])]
+                        if stream_label is not None and \
+                           str(l['label_id']) in stream_label:
+                            label = stream_label[str(l['label_id'])]
                             cv2.putText(frame, label, pos,
                                         cv2.FONT_HERSHEY_DUPLEX,
                                         0.5, self.bad_color, 2,
@@ -174,14 +175,14 @@ class SubscriberCallback:
                 cv2.rectangle(frame, tl, br, self.bad_color, 2)
 
                 # Draw labels for defects if given the mapping
-                if self.labels is not None:
+                if stream_label is not None:
                     # Position of the text below the bounding box
                     pos = (tl[0], br[1] + 20)
 
                     # The label is the "type" key of the defect, which
                     #  is converted to a string for getting from the labels
-                    if str(d['type']) in self.labels:
-                        label = self.labels[str(d['type'])]
+                    if str(d['type']) in stream_label:
+                        label = stream_label[str(d['type'])]
                         cv2.putText(frame, label, pos,
                                     cv2.FONT_HERSHEY_DUPLEX,
                                     0.5, self.bad_color, 2, cv2.LINE_AA)
@@ -238,12 +239,20 @@ class SubscriberCallback:
         self.logger.debug(f'Initializing subscriber for topic \'{topic}\'')
         subscriber = msgbus.new_subscriber(topic)
 
+        stream_label = None
+
+        for key in self.labels:
+            if key == topic:
+                stream_label = self.labels[key]
+                break
+
         while True:
             data = subscriber.recv()
 
             if isinstance(data, (list, tuple, )):
                 metadata, blob = data
-                results, frame = self.draw_defect(metadata, blob, topic)
+                results, frame = self.draw_defect(metadata, blob, topic,
+                                                  stream_label)
                 if self.display:
                     self.queue_publish(topic, frame)
                 else:
@@ -260,20 +269,16 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     ap.add_argument('-f', '--fullscreen', default=False, action='store_true',
                     help='Start visualizer in fullscreen mode')
-    ap.add_argument('-l', '--labels', default=None,
-                    help='JSON file mapping the defect type to labels')
-
     return ap.parse_args()
 
 
-def msg_bus_subscriber(topic_config_list, queueDict, logger, jsonConfig,
-                       labels):
+def msg_bus_subscriber(topic_config_list, queueDict, logger, jsonConfig):
     """msg_bus_subscriber is the ZeroMQ callback to
     subscribe to classified results
     """
     sc = SubscriberCallback(queueDict, logger,
-                            labels=labels, dir_name=os.environ["IMAGE_DIR"],
-                            display=True)
+                            dir_name=os.environ["IMAGE_DIR"],
+                            display=True, labels=jsonConfig["labels"])
 
     for topic_config in topic_config_list:
         topic, msgbus_cfg = topic_config
@@ -310,14 +315,6 @@ def get_image_data(topic_name):
     logger = configure_logging(globalConfig['PY_LOG_LEVEL'].upper(),
                                __name__, dev_mode)
 
-    # If user provides labels, read them in
-    if args.labels is not None:
-        assert_exists(args.labels)
-        with open(args.labels, 'r') as f:
-            labels = json.load(f)
-    else:
-        labels = None
-
     visualizerConfig = config_client.GetConfig("/" + app_name + "/config")
     jsonConfig = json.loads(visualizerConfig)
     image_dir = os.environ["IMAGE_DIR"]
@@ -353,7 +350,7 @@ def get_image_data(topic_name):
     try:
         finalImage = get_blank_image(TEXT)
         msg_bus_subscriber(topic_config_list, queueDict, logger,
-                           jsonConfig, labels)
+                           jsonConfig)
         while True:
             if topic_name in queueDict.keys():
                 if not queueDict[topic_name].empty():
@@ -539,10 +536,10 @@ if __name__ == '__main__':
     else:
         # For Secure Session Cookie
         app.config.update(SESSION_COOKIE_SECURE=True)
-        
+
         server_cert = config_client.GetConfig("/" + app_name + "/server_cert")
         server_key = config_client.GetConfig("/" + app_name + "/server_key")
- 
+
         # Since Python SSL Load Cert Chain Method is not having option to load
         # Cert from Variable. So for now we are going below method
         with open('server_cert.pem', 'w') as f:

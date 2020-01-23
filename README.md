@@ -46,11 +46,9 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 
 #### Using Labels
 
-  In order to have the visualizer label each of the defects on the image (i.e.
-  text underneath of the bounding box), you will need to provide a JSON file with
-  the mapping between the classfication type and the text you wish to display.
+  In order to have the visualizer label for each of the defects on the image, label values in json format has to be provided in [etcd_pre_load.json](../docker_setup/provision/config/etcd_pre_load.json) file under "/Visualizer/config" with the mapping between topic subscribed and the label that has to be displayed.
 
-  An example of what this JSON file should look like is shown below. In this case
+  An example of what this JSON value should look like is shown below. In this case
   it is assumed that the classification types are `0` and `1` and the text labels
   to be displayed are `MISSING` and `SHORT` respectively.
 
@@ -60,35 +58,28 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
       "1": "SHORT"
   }
   ```
-  > **NOTE:** These labels are the mapping for the PCB demo provided in EIS's visualizer directory. Currently pcb_demo_label.json and safety_demo_label.json files are provided for reference.
+  > **NOTE:** These labels are the mapping for the PCB demo provided in EIS's visualizer directory. Currently camera1_stream_results consists of pcb demo labeling and camera2_stream_results consists of safety demo labeling.
+  Hence, in [etcd_pre_load.json](../docker_setup/provision/config/etcd_pre_load.json), mapping of camera1_stream_results, camera2_stream_results (subscribed topics) has to be done with pcb demo labeling, safety demo labeling respectively.
 
-  An important thing to note above, is that the keys need to still be strings.
-  The visualizer will take care of the conversion when it receives publications
-  for classification results.
-
-  In case the user running visualizer as a docker container, the visualizer section in [docker-compose.yml](../docker_setup/docker-compose.yml) file should be changed in order to process the labels from a specific JSON file. The ***command*** variable in docker-compose.yml file can be changed as below for using safety_demo_label.json instead of default json file:
-  
-
-  Before
   ```json
-  ia_visualizer:
-  depends_on:
-    - ia_common
-  -----snip-----
-  command: ["pcb_demo_label.json"]
-  -----snip-----
+"/WebVisualizer/config": {
+        "username": "admin",
+        "password": "admin@123",
+        "port": 5000,
+        "labels" : {
+            "camera1_stream": {
+                "0": "MISSING",
+                "1": "SHORT"
+            },
+            "camera2_stream_results":{
+                "1": "safety_helmet",
+                "2": "safety_jacket",
+                "3": "Safe",
+                "4": "Violation"
+            }
+        }
+    }
+    ```
 
-  ```
-  After
-  ```json
-  ia_visualizer:
-  depends_on:
-  - ia_common
-  -----snip-----
-  command: ["safety_demo_label.json"]
-  -----snip-----
-  ```
-
-Passing this json file as command line option has been taken care in corrsponding Docker file.
 
 
