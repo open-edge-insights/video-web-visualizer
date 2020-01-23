@@ -248,10 +248,9 @@ class SubscriberCallback:
                 break
 
         while True:
-            data = subscriber.recv()
+            metadata, blob = subscriber.recv()
 
-            if isinstance(data, (list, tuple, )):
-                metadata, blob = data
+            if metadata is not None and blob is not None:
                 results, frame = self.draw_defect(metadata, blob, topic,
                                                   stream_label)
                 if self.display:
@@ -537,7 +536,6 @@ if __name__ == '__main__':
     else:
         # For Secure Session Cookie
         app.config.update(SESSION_COOKIE_SECURE=True)
-
         server_cert = config_client.GetConfig("/" + app_name + "/server_cert")
         server_key = config_client.GetConfig("/" + app_name + "/server_key")
 
