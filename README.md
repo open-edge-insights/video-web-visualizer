@@ -7,7 +7,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 * Follow [provision/README.md](../README#provision-eis.md) for EIS provisioning
   if not done already as part of EIS stack setup
 
-* Running web visualizer as a container from [docker_setup](../../docker_setup):
+* Running visualizer as a container from [build](../../build):
 
   ```
     $ docker-compose up --build ia_web_visualizer
@@ -23,7 +23,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
         http://localhost:5000
 
   #### PROD Mode:
-    * Import 'ca_certificate.pem' from 'docker_setup/provision/Certificates/ca' Directory to your Browser Certifcates.
+    * Import 'ca_certificate.pem' from 'build/provision/Certificates/ca' Directory to your Browser Certifcates.
 
       ##### Steps to Import Certificates
         * Goto *Settings* in Chrome
@@ -31,7 +31,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
         * Select Manage Certificates Option
         * Under *Authorities* Tab Click Import Button
         * With Import Wizard navigate to 
-          *IEdgeInsights/docker_setup/provision/Certificates/ca* Dir
+          *IEdgeInsights/build/provision/Certificates/ca* Dir
         * Select *ca_certificate.pem* file
         * Select All CheckBoxes and Click Import Button.
 
