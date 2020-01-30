@@ -25,6 +25,7 @@ from jinja2 import Environment, select_autoescape, FileSystemLoader
 import ssl
 import string
 import secrets
+import tempfile
 
 TEXT = 'Disconnected'
 TEXTPOSITION = (10, 110)
@@ -542,13 +543,17 @@ if __name__ == '__main__':
 
         # Since Python SSL Load Cert Chain Method is not having option to load
         # Cert from Variable. So for now we are going below method
-        with open('server_cert.pem', 'w') as f:
-            f.write(server_cert)
-        with open('server_key.pem', 'w') as f:
-            f.write(server_key)
+        server_cert_temp = tempfile.NamedTemporaryFile()
+        server_key_temp = tempfile.NamedTemporaryFile()
 
-        context.load_cert_chain("server_cert.pem", "server_key.pem")
-        os.remove("server_cert.pem")
-        os.remove("server_key.pem")
+        server_cert_temp.write(bytes(server_cert, "utf-8"))
+        server_cert_temp.seek(0)
+
+        server_key_temp.write(bytes(server_key, "utf-8"))
+        server_key_temp.seek(0)
+
+        context.load_cert_chain(server_cert_temp.name, server_key_temp.name)
+        server_cert_temp.close()
+        server_key_temp.close()
         app.run(host='0.0.0.0', port=jsonConfig['port'],
                 debug=flaskDebug, threaded=True, ssl_context=context)
