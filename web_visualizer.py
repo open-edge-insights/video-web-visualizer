@@ -188,8 +188,9 @@ class SubscriberCallback:
                                     cv2.FONT_HERSHEY_DUPLEX,
                                     0.5, self.bad_color, 2, cv2.LINE_AA)
                     else:
-                        self.logger.error("Label id:{} \
-                                          not found".format(d['type']))
+                        cv2.putText(frame, str(d['type']), pos,
+                                    cv2.FONT_HERSHEY_DUPLEX,
+                                    0.5, self.bad_color, 2, cv2.LINE_AA)
 
             # Draw border around frame if has defects or no defects
             if results['defects']:
