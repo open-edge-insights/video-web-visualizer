@@ -549,6 +549,13 @@ if __name__ == '__main__':
     cfg_mgr = ConfigManager()
     config_client = cfg_mgr.get_config_client("etcd", conf)
     visualizerConfig = config_client.GetConfig("/" + app_name + "/config")
+
+    # Validating config against schema
+    with open('./schema.json', "rb") as infile:
+        schema = infile.read()
+        if (Util.validate_json(schema, visualizerConfig)) is not True:
+            sys.exit(1)
+
     jsonConfig = json.loads(visualizerConfig)
 
     globalenvConfig = config_client.GetConfig("/GlobalEnv/")

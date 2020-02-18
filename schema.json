@@ -1,0 +1,22 @@
+{
+  "definitions": {},
+  "type": "object",
+  "required": [
+    "username",
+    "password",
+    "port"
+  ],
+  "properties": {
+    "username": {
+      "type": "string",
+      "pattern": "^(.*)$"
+    },
+    "password": {
+      "type": "string",
+      "pattern": "^(.*)$"
+    },
+    "port": {
+      "type": "integer"
+    }
+  }
+}
