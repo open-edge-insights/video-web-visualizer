@@ -34,7 +34,7 @@ from distutils.util import strtobool
 import threading
 import time
 import random
-from libs.ConfigManager import ConfigManager
+from eis.config_manager import ConfigManager
 from util.util import Util
 from util.msgbusutil import MsgBusUtil
 import eis.msgbus as mb
