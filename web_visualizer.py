@@ -50,7 +50,7 @@ class SubscriberCallback:
     """
 
     def __init__(self, topicQueueDict, logger, good_color=(0, 255, 0),
-                 bad_color=(0, 0, 255), dir_name=None, display=None,
+                 bad_color=(0, 0, 255), display=None,
                  labels=None):
         """Constructor
 
@@ -72,7 +72,6 @@ class SubscriberCallback:
         self.labels = labels
         self.good_color = good_color
         self.bad_color = bad_color
-        self.dir_name = dir_name
         self.display = display
         self.msg_frame_queue = queue.Queue(maxsize=15)
 
@@ -278,7 +277,6 @@ def msg_bus_subscriber(topic_config_list, queueDict, logger, jsonConfig):
     subscribe to classified results
     """
     sc = SubscriberCallback(queueDict, logger,
-                            dir_name=os.environ["IMAGE_DIR"],
                             display=True, labels=jsonConfig["labels"])
 
     for topic_config in topic_config_list:
@@ -318,11 +316,6 @@ def get_image_data(topic_name):
 
     visualizerConfig = config_client.GetConfig("/" + app_name + "/config")
     jsonConfig = json.loads(visualizerConfig)
-    image_dir = os.environ["IMAGE_DIR"]
-    # If user provides image_dir, create the directory if don't exists
-    if image_dir:
-        if not os.path.exists(image_dir):
-            os.mkdir(image_dir)
 
     topicsList = MsgBusUtil.get_topics_from_env("sub")
     queueDict = {}
