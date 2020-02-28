@@ -19,10 +19,6 @@ RUN pip3 install -r requirements.txt
 ARG EIS_USER_NAME
 RUN adduser --quiet --disabled-password ${EIS_USER_NAME}
 
-RUN touch visualize.log && \
-    chown ${EIS_USER_NAME}:${EIS_USER_NAME} visualize.log &&  \
-    chmod 777 visualize.log
-
 ENV PYTHONPATH ${PY_WORK_DIR}/
 
 FROM ia_common:$EIS_VERSION as common
