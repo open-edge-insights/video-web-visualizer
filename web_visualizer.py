@@ -203,7 +203,6 @@ class SubscriberCallback:
         # Display information about frame
         (dx, dy) = (20, 10)
         if 'display_info' in results:
-            results['display_info'] = json.loads(results['display_info'])
             for d_i in results['display_info']:
                 # Get priority
                 priority = d_i['priority']
