@@ -48,7 +48,6 @@ class SubscriberCallback:
     """Object for the databus callback to wrap needed state variables for the
     callback in to EIS.
     """
-
     def __init__(self, topicQueueDict, logger, good_color=(0, 255, 0),
                  bad_color=(0, 0, 255), display=None,
                  labels=None):
@@ -90,8 +89,9 @@ class SubscriberCallback:
             if (key == topic):
                 if not self.topicQueueDict[key].full():
                     self.topicQueueDict[key].put_nowait(frame)
+                    del frame
                 else:
-                    self.logger.warning("Dropping frames as the queue is full")
+                    self.logger.debug("Dropping frames as the queue is full")
 
     def draw_defect(self, results, blob, topic, stream_label=None):
         """Identify the defects and draw boxes on the frames
@@ -116,7 +116,7 @@ class SubscriberCallback:
             encoding = {"type": results['encoding_type'],
                         "level": results['encoding_level']}
         # Convert to Numpy array and reshape to frame
-        self.logger.info('Preparing frame for visualization')
+        self.logger.debug('Preparing frame for visualization')
         frame = np.frombuffer(blob, dtype=np.uint8)
         if encoding is not None:
             frame = np.reshape(frame, (frame.shape))
@@ -253,6 +253,7 @@ class SubscriberCallback:
                 results, frame = self.draw_defect(metadata, blob, topic,
                                                   stream_label)
                 if self.display:
+                    del results
                     self.queue_publish(topic, frame)
                 else:
                     self.logger.info(f'Classifier_results: {results}')
@@ -349,7 +350,9 @@ def get_image_data(topic_name):
                 if not queueDict[topic_name].empty():
                     frame = queueDict[topic_name].get_nowait()
                     ret, jpeg = cv2.imencode('.jpg', frame)
+                    del frame
                     finalImage = jpeg.tobytes()
+                    del jpeg
             else:
                 msg_txt = "Topic Not Found: " + topic_name
                 finalImage = get_blank_image(msg_txt)
@@ -505,6 +508,7 @@ if __name__ == '__main__':
 
     # Parse command line arguments
     args = parse_args()
+
     app.secret_key = os.urandom(24)
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
