@@ -1,3 +1,23 @@
+# Copyright (c) 2020 Intel Corporation.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 """Simple visualizer for images processed by ETA.
 """
 import io
@@ -200,8 +220,20 @@ class SubscriberCallback:
             frame = cv2.copyMakeBorder(frame, 5, 5, 5, 5, cv2.BORDER_CONSTANT,
                                        value=outline_color)
 
+        # Display information about frame FPS
+        x = 20
+        y = 20
+        for res in results:
+            if "Fps" in res:
+                fps_str = "{} : {}".format(str(res), str(results[res]))
+                self.logger.debug(fps_str)
+                cv2.putText(frame, fps_str, (x, y),
+                            cv2.FONT_HERSHEY_DUPLEX, 0.5,
+                            self.good_color, 1, cv2.LINE_AA)
+                y = y + 20
+
         # Display information about frame
-        (dx, dy) = (20, 10)
+        (dx, dy) = (20, 50)
         if 'display_info' in results:
             for d_i in results['display_info']:
                 # Get priority
