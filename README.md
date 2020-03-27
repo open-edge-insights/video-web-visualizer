@@ -145,5 +145,4 @@ B) For Ingestor's **GVA** type, metadata structure sample is :
 ```
 where in `gva_meta` is a list of dicts.
 
-
-
+**NOTE**: Any data with in the list, tuple or dict of meta data should be of primitive data type (int, float, string, bool). Refer the examples given above.
