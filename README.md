@@ -30,7 +30,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
         * Search *Manage Certificates* Under Privacy & Security
         * Select Manage Certificates Option
         * Under *Authorities* Tab Click Import Button
-        * With Import Wizard navigate to 
+        * With Import Wizard navigate to
           *IEdgeInsights/build/provision/Certificates/ca* Dir
         * Select *ca_certificate.pem* file
         * Select All CheckBoxes and Click Import Button.
@@ -46,7 +46,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 
 #### Using Labels
 
-  In order to have the web visualizer label for each of the defects on the image, label values in json format has to be provided in [etcd_pre_load.json](../docker_setup/provision/config/etcd_pre_load.json) file under "/WebVisualizer/config" with the mapping between topic subscribed and the label that has to be displayed.
+  In order to have the web visualizer label for each of the defects on the image, label values in json format has to be provided in [etcd_pre_load.json](../build/provision/config/etcd_pre_load.json) file under "/WebVisualizer/config" with the mapping between topic subscribed and the label that has to be displayed.
 
   An example of what this JSON value should look like is shown below. In this case
   it is assumed that the classification types are `0` and `1` and the text labels
@@ -59,7 +59,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
   }
   ```
   > **NOTE:** These labels are the mapping for the PCB demo provided in EIS's web visualizer directory. Currently camera1_stream_results consists of pcb demo labeling and camera2_stream_results consists of safety demo labeling.
-  Hence, in [etcd_pre_load.json](../docker_setup/provision/config/etcd_pre_load.json), mapping of camera1_stream_results, camera2_stream_results (subscribed topics) has to be done with pcb demo labeling, safety demo labeling respectively.
+  Hence, in [etcd_pre_load.json](../build/provision/config/etcd_pre_load.json), mapping of camera1_stream_results, camera2_stream_results (subscribed topics) has to be done with pcb demo labeling, safety demo labeling respectively.
 
   ```json
 "/WebVisualizer/config": {
@@ -92,15 +92,15 @@ A) For Ingestor's **Non-GVA** type, metadata structure sample is :
 {
  'channels': 3,
  'encoding_type': 'jpeg',
- 'height': 1200, 
+ 'height': 1200,
 
  'defects': [
      {'type': 0, 'tl': [1019, 644], 'br': [1063, 700]},
      {'type': 0, 'tl': [1297, 758], 'br': [1349, 796]}
-    ], 
+    ],
 
 'display_info': [{'info':'good', 'priority':0}],
- 
+
 'img_handle': '348151d424',
 'width': 1920,
 'encoding_level': 95
@@ -111,7 +111,7 @@ where in `defects` and `display_info` is a list of dicts.
 
 Each entry in `defects` list is a dictionary that should contain following keys:
 * `type` : value given to type will be the label id
-* `tl` : value is the top-left `x` and `y` co-ordinate of the defect in the image. 
+* `tl` : value is the top-left `x` and `y` co-ordinate of the defect in the image.
 * `br` : value is the bottom-right `x` and `y` co-ordinate of the defect in the image.
 
 Each entry in `display_info` list is a dictionary that should contain following keys:
@@ -126,19 +126,19 @@ B) For Ingestor's **GVA** type, metadata structure sample is :
 
 ```json
 {
-    'channels': 3, 
+    'channels': 3,
     'gva_meta': [
 
-        {'x': 1047, 'height': 86, 'y': 387, 'width': 105, 'tensor': [{'label': '', 'label_id': 1, 'confidence':0.8094226121902466, 'attribute':'detection'}]}, 
+        {'x': 1047, 'height': 86, 'y': 387, 'width': 105, 'tensor': [{'label': '', 'label_id': 1, 'confidence':0.8094226121902466, 'attribute':'detection'}]},
 
         {'x': 1009, 'height': 341, 'y': 530, 'width': 176, 'tensor': [{'label': '', 'label_id': 2, 'confidence': 0.9699158668518066, 'attribute': 'detection'}]}
 
-        ], 
+        ],
 
-    'encoding_type': 'jpeg', 
-    'height': 1080, 
-    'img_handle': '7247149a0d', 
-    'width': 1920, 
+    'encoding_type': 'jpeg',
+    'height': 1080,
+    'img_handle': '7247149a0d',
+    'width': 1920,
     'encoding_level': 95
 }
 
