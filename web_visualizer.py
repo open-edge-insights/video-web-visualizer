@@ -36,7 +36,7 @@ import time
 import random
 from eis.config_manager import ConfigManager
 from util.util import Util
-from util.msgbusutil import MsgBusUtil
+from eis.env_config import EnvConfig
 import eis.msgbus as mb
 from util.log import configure_logging, LOG_LEVELS
 from flask import Flask, render_template, Response, redirect, request, \
@@ -349,9 +349,9 @@ def get_image_data(topic_name):
     visualizerConfig = config_client.GetConfig("/" + app_name + "/config")
     jsonConfig = json.loads(visualizerConfig)
 
-    topicsList = MsgBusUtil.get_topics_from_env("sub")
+    topicsList = EnvConfig.get_topics_from_env("sub")
     queueDict = {}
-    topicsList = MsgBusUtil.get_topics_from_env("sub")
+    topicsList = EnvConfig.get_topics_from_env("sub")
 
     subDict = {}
     for subtopic in topicsList:
@@ -360,7 +360,7 @@ def get_image_data(topic_name):
 
     topic_config_list = []
     queueDict[topic_name] = queue.Queue(maxsize=10)
-    msgbus_cfg = MsgBusUtil.get_messagebus_config(topic_name,
+    msgbus_cfg = EnvConfig.get_messagebus_config(topic_name,
                                                   "sub", subDict[topic_name],
                                                   config_client, dev_mode)
 
@@ -399,7 +399,7 @@ def get_image_data(topic_name):
 
 
 def get_topic_list():
-    topicsList = MsgBusUtil.get_topics_from_env("sub")
+    topicsList = EnvConfig.get_topics_from_env("sub")
     finaltopicList = []
     for topic in topicsList:
         publisher, topic = topic.split("/")
