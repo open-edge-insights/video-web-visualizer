@@ -1,6 +1,7 @@
 # Dockerfile for WebVisualizer
 ARG EIS_VERSION
-FROM ia_eisbase:$EIS_VERSION as eisbase
+ARG DOCKER_REGISTRY
+FROM ${DOCKER_REGISTRY}ia_eisbase:$EIS_VERSION as eisbase
 LABEL description="Web Visualizer Image"
 
 WORKDIR ${PY_WORK_DIR}
@@ -21,7 +22,7 @@ RUN adduser --quiet --disabled-password ${EIS_USER_NAME}
 
 ENV PYTHONPATH ${PY_WORK_DIR}/
 
-FROM ia_common:$EIS_VERSION as common
+FROM ${DOCKER_REGISTRY}ia_common:$EIS_VERSION as common
 
 FROM eisbase
 

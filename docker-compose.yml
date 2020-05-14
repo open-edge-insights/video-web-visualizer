@@ -12,6 +12,7 @@ services:
         EIS_VERSION: ${EIS_VERSION}
         EIS_UID: ${EIS_UID}
         EIS_USER_NAME: ${EIS_USER_NAME}
+        DOCKER_REGISTRY: ${DOCKER_REGISTRY}
     read_only: true
     image: ${DOCKER_REGISTRY}ia_web_visualizer:${EIS_VERSION}
     container_name: ia_web_visualizer
