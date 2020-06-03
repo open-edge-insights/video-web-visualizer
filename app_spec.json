@@ -1,0 +1,53 @@
+{
+    "Module" : {
+        "Name": "WebVisualizer",
+        "Description": "Web_visualizer module manifest",
+        "SchemaVersion": "0.2",
+        "ManifestFile": "${idx:webvisualizer:$EIS_VERSION}",
+        "RunAsUser": "$EIS_UID",
+        "RunAsGroup": "$EIS_UID",
+        "Resources": {
+            "CPU": 100,
+            "MemoryMB": 100
+        },
+        "ExecutionEnv": {
+            "AppName": "WebVisualizer",
+            "PROFILING_MODE": "false",
+            "ETCD_ENDPOINT": "${datastore.endpoint}",
+            "CONFIGMGR_CACERT": "${databucket.cacert}",
+            "CONFIGMGR_CERT": "${databucket.cert}",
+            "CONFIGMGR_KEY": "${databucket.key}",
+            "DEV_MODE": "$DEV_MODE",
+            "ETCD_PREFIX": "$ETCD_PREFIX",
+            "CertType": "zmq,pem",
+            "ZMQ_RECV_HWM": "50",
+            "SubTopics": "VideoAnalytics/camera1_stream_results",
+            "camera1_stream_results_cfg": "zmq_tcp,${ep.web-vis-in.remoteaddress}:${ep.web-vis-in.remoteport}"
+        },
+        "Endpoints": [
+            {
+                "Name": "web-vis-out",
+                "Endtype": "server",
+                "Protocol": "TCP",
+                "Port": "5000",
+                "DataType": "messages",
+                "Link": "web-vis-outlink"
+            },
+            {
+                "Name": "web-vis-in",
+                "Endtype": "client",
+                "DataType": "messages",
+                "Link": "va-output",
+                "Port": "29170"
+            }
+        ]
+    },
+    "Ingress" : {
+        "Name": "ext-webvisualizer",
+        "Protocol": "TCP",
+        "Options": {
+            "Backend": "web-vis-outlink",
+            "Port": "31505"
+        }
+    }
+}
