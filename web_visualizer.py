@@ -20,63 +20,56 @@
 
 """Simple visualizer for images processed by ETA.
 """
-import io
 import os
 import time
 import sys
-import cv2
 import json
 import queue
-import logging
-import argparse
-import numpy as np
 from distutils.util import strtobool
 import threading
-import time
 import random
-from eis.config_manager import ConfigManager
-from util.util import Util
-from eis.env_config import EnvConfig
-import eis.msgbus as mb
-from util.log import configure_logging, LOG_LEVELS
-from flask import Flask, render_template, Response, redirect, request, \
-                         session, abort, escape
-from jinja2 import Environment, select_autoescape, FileSystemLoader
 import ssl
-import string
 import secrets
 import tempfile
+from eis.config_manager import ConfigManager
+from eis.env_config import EnvConfig
+import eis.msgbus as mb
+import cv2
+from jinja2 import Environment, select_autoescape, FileSystemLoader
+import numpy as np
+from flask import Flask, render_template, Response, request, session
+from util.util import Util
+from util.log import configure_logging
+
 
 TEXT = 'Disconnected'
 TEXTPOSITION = (10, 110)
 TEXTFONT = cv2.FONT_HERSHEY_PLAIN
 TEXTCOLOR = (255, 255, 255)
 MAX_FAILED_LOGIN_ATTEMPTS = 3
-number_of_login_attempts = 0
+NUMBER_OF_LOGIN_ATTEMPTS = 0
 
 NONCE = secrets.token_urlsafe(8)
-app = Flask(__name__)
-loader = FileSystemLoader(searchpath="templates/")
+APP = Flask(__name__)
+LOADER = FileSystemLoader(searchpath="templates/")
 
 # Setting default auto-escape for all templates
-env = Environment(loader=loader, autoescape=select_autoescape(
-                  enabled_extensions=('html'),
-                  default_for_string=True,))
+ENV = Environment(loader=LOADER, autoescape=select_autoescape(
+    enabled_extensions=('html'),
+    default_for_string=True,))
 
 
 class SubscriberCallback:
     """Object for the databus callback to wrap needed state variables for the
     callback in to EIS.
     """
-    def __init__(self, topicQueueDict, logger, good_color=(0, 255, 0),
+    def __init__(self, topic_queue_dict, logger, good_color=(0, 255, 0),
                  bad_color=(0, 0, 255), display=None,
                  labels=None):
         """Constructor
 
-        :param frame_queue: Queue to put frames in as they become available
-        :type: queue.Queue
-        :param im_client: Image store client
-        :type: GrpcImageStoreClient
+        :param topic_queue_dict: Dictionary to maintain multiple queues.
+        :type: dict
         :param labels: (Optional) Label mapping for text to draw on the frame
         :type: dict
         :param good_color: (Optional) Tuple for RGB color to use for outlining
@@ -86,11 +79,11 @@ class SubscriberCallback:
             bad image
         :type: tuple
         """
-        self.topicQueueDict = topicQueueDict
+        self.topic_queue_dict = topic_queue_dict
         self.logger = logger
-        self.labels = labels
         self.good_color = good_color
         self.bad_color = bad_color
+        self.labels = labels
         self.display = display
         self.msg_frame_queue = queue.Queue(maxsize=15)
 
@@ -102,26 +95,22 @@ class SubscriberCallback:
         :type: str
         :param frame: Images with the bounding box
         :type: numpy.ndarray
-        :param topicQueueDict: Dictionary to maintain multiple queues.
-        :type: dict
         """
-        for key in self.topicQueueDict:
-            if (key == topic):
-                if not self.topicQueueDict[key].full():
-                    self.topicQueueDict[key].put_nowait(frame)
+        for key in self.topic_queue_dict:
+            if key == topic:
+                if not self.topic_queue_dict[key].full():
+                    self.topic_queue_dict[key].put_nowait(frame)
                     del frame
                 else:
                     self.logger.debug("Dropping frames as the queue is full")
 
-    def draw_defect(self, results, blob, topic, stream_label=None):
+    def draw_defect(self, results, blob, stream_label=None):
         """Identify the defects and draw boxes on the frames
 
         :param results: Metadata of frame received from message bus.
         :type: dict
         :param blob: Actual frame received from message bus.
         :type: bytes
-        :param topic: Topic the message was published on
-        :type: str
         :param results: Message received on the given topic (JSON blob)
         :type: str
         :return: Return classified results(metadata and frame)
@@ -150,64 +139,65 @@ class SubscriberCallback:
 
         # Draw defects for Gva
         if 'gva_meta' in results:
-            c = 0
-            for d in results['gva_meta']:
-                x1 = d['x']
-                y1 = d['y']
-                x2 = x1 + d['width']
-                y2 = y1 + d['height']
+            count = 0
+            for defect in results['gva_meta']:
+                x_1 = defect['x']
+                y_1 = defect['y']
+                x_2 = x_1 + defect['width']
+                y_2 = y_1 + defect['height']
 
-                tl = tuple([x1, y1])
-                br = tuple([x2, y2])
+                top_left = tuple([x_1, y_1])
+                bottom_right = tuple([x_2, y_2])
 
                 # Draw bounding box
-                cv2.rectangle(frame, tl, br, self.bad_color, 2)
+                cv2.rectangle(frame, top_left, bottom_right, self.bad_color, 2)
 
                 # Draw labels
-                for l in d['tensor']:
-                    if l['label_id'] is not None:
-                        pos = (x1, y1 - c)
-                        c += 10
+                for label_list in defect['tensor']:
+                    if label_list['label_id'] is not None:
+                        pos = (x_1, y_1 - count)
+                        count += 10
                         if stream_label is not None and \
-                           str(l['label_id']) in stream_label:
-                            label = stream_label[str(l['label_id'])]
+                           str(label_list['label_id']) in stream_label:
+                            label = stream_label[str(label_list['label_id'])]
                             cv2.putText(frame, label, pos,
                                         cv2.FONT_HERSHEY_DUPLEX,
                                         0.5, self.bad_color, 2,
                                         cv2.LINE_AA)
                         else:
                             self.logger.error("Label id:{}\
-                                              not found".format(l['label_id']))
+                                              not found".format(
+                                                  label_list['label_id']))
 
         # Draw defects
         if 'defects' in results:
-            for d in results['defects']:
-                d['tl'][0] = int(d['tl'][0])
-                d['tl'][1] = int(d['tl'][1])
-                d['br'][0] = int(d['br'][0])
-                d['br'][1] = int(d['br'][1])
+            for defect in results['defects']:
+                defect['tl'][0] = int(defect['tl'][0])
+                defect['tl'][1] = int(defect['tl'][1])
+                defect['br'][0] = int(defect['br'][0])
+                defect['br'][1] = int(defect['br'][1])
 
                 # Get tuples for top-left and bottom-right coordinates
-                tl = tuple(d['tl'])
-                br = tuple(d['br'])
+                top_left = tuple(defect['tl'])
+                bottom_right = tuple(defect['br'])
 
                 # Draw bounding box
-                cv2.rectangle(frame, tl, br, self.bad_color, 2)
+                cv2.rectangle(frame, top_left, bottom_right, self.bad_color, 2)
 
                 # Draw labels for defects if given the mapping
                 if stream_label is not None:
                     # Position of the text below the bounding box
-                    pos = (tl[0], br[1] + 20)
+                    pos = (top_left[0], bottom_right[1] + 20)
 
                     # The label is the "type" key of the defect, which
                     #  is converted to a string for getting from the labels
-                    if str(d['type']) in stream_label:
-                        label = stream_label[str(d['type'])]
+                    if str(defect['type']) in stream_label:
+                        label = stream_label[str(defect['type'])]
                         cv2.putText(frame, label, pos,
                                     cv2.FONT_HERSHEY_DUPLEX,
                                     0.5, self.bad_color, 2, cv2.LINE_AA)
                     else:
-                        cv2.putText(frame, str(d['type']), pos,
+                        cv2.putText(frame, str(defect['type']), pos,
                                     cv2.FONT_HERSHEY_DUPLEX,
                                     0.5, self.bad_color, 2, cv2.LINE_AA)
 
@@ -221,37 +211,40 @@ class SubscriberCallback:
                                        value=outline_color)
 
         # Display information about frame FPS
-        x = 20
-        y = 20
+        x_cord = 20
+        y_cord = 20
         for res in results:
             if "Fps" in res:
                 fps_str = "{} : {}".format(str(res), str(results[res]))
-                self.logger.info(fps_str)
-                cv2.putText(frame, fps_str, (x, y),
+                self.logger.debug(fps_str)
+                cv2.putText(frame, fps_str, (x_cord, y_cord),
                             cv2.FONT_HERSHEY_DUPLEX, 0.5,
                             self.good_color, 1, cv2.LINE_AA)
-                y = y + 20
+                y_cord = y_cord + 20
 
         # Display information about frame
-        (dx, dy) = (20, 50)
+        (d_x, d_y) = (20, 50)
         if 'display_info' in results:
             for d_i in results['display_info']:
                 # Get priority
                 priority = d_i['priority']
                 info = d_i['info']
-                dy = dy + 10
+                d_y = d_y + 10
 
                 #  LOW
                 if priority == 0:
-                    cv2.putText(frame, info, (dx, dy), cv2.FONT_HERSHEY_DUPLEX,
+                    cv2.putText(frame, info, (d_x, d_y),
+                                cv2.FONT_HERSHEY_DUPLEX,
                                 0.5, (0, 255, 0), 1, cv2.LINE_AA)
                 #  MEDIUM
                 if priority == 1:
-                    cv2.putText(frame, info, (dx, dy), cv2.FONT_HERSHEY_DUPLEX,
+                    cv2.putText(frame, info, (d_x, d_y),
+                                cv2.FONT_HERSHEY_DUPLEX,
                                 0.5, (0, 150, 170), 1, cv2.LINE_AA)
                 #  HIGH
                 if priority == 2:
-                    cv2.putText(frame, info, (dx, dy), cv2.FONT_HERSHEY_DUPLEX,
+                    cv2.putText(frame, info, (d_x, d_y),
+                                cv2.FONT_HERSHEY_DUPLEX,
                                 0.5, (0, 0, 255), 1, cv2.LINE_AA)
 
         return results, frame
@@ -282,7 +275,7 @@ class SubscriberCallback:
             metadata, blob = subscriber.recv()
 
             if metadata is not None and blob is not None:
-                results, frame = self.draw_defect(metadata, blob, topic,
+                results, frame = self.draw_defect(metadata, blob,
                                                   stream_label)
                 if self.display:
                     del results
@@ -291,42 +284,34 @@ class SubscriberCallback:
                     self.logger.debug(f'Classifier results: {results}')
             else:
                 self.logger.debug(f'Non Image Data Subscription\
-                                 : Classifier_results: {data}')
+                                 : Classifier_results: {metadata}')
 
 
-def parse_args():
-    """Parse command line arguments.
-    """
-    ap = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    ap.add_argument('-f', '--fullscreen', default=False, action='store_true',
-                    help='Start visualizer in fullscreen mode')
-    return ap.parse_args()
-
-
-def msg_bus_subscriber(topic_config_list, queueDict, logger, jsonConfig):
+def msg_bus_subscriber(topic_config_list, queue_dict, logger, json_config):
     """msg_bus_subscriber is the ZeroMQ callback to
     subscribe to classified results
     """
-    sc = SubscriberCallback(queueDict, logger,
-                            display=True, labels=jsonConfig["labels"])
+    sub_cbk = SubscriberCallback(queue_dict, logger,
+                                 display=True, labels=json_config["labels"])
 
     for topic_config in topic_config_list:
         topic, msgbus_cfg = topic_config
 
-        callback_thread = threading.Thread(target=sc.callback,
+        callback_thread = threading.Thread(target=sub_cbk.callback,
                                            args=(msgbus_cfg, topic, ))
         callback_thread.start()
 
 
 def get_blank_image(text):
-    blankImageShape = (130, 200, 3)
-    blankImage = np.zeros(blankImageShape, dtype=np.uint8)
-    cv2.putText(blankImage, text, TEXTPOSITION,
+    """Get Blank Images
+    """
+    blank_image_shape = (130, 200, 3)
+    blank_image = np.zeros(blank_image_shape, dtype=np.uint8)
+    cv2.putText(blank_image, text, TEXTPOSITION,
                 TEXTFONT, 1.5, TEXTCOLOR, 2, cv2.LINE_AA)
-    ret, jpeg = cv2.imencode('.jpg', blankImage)
-    finalImage = jpeg.tobytes()
-    return finalImage
+    _, jpeg = cv2.imencode('.jpg', blank_image)
+    final_image = jpeg.tobytes()
+    return final_image
 
 
 def get_image_data(topic_name):
@@ -341,28 +326,28 @@ def get_image_data(topic_name):
     cfg_mgr = ConfigManager()
     config_client = cfg_mgr.get_config_client("etcd", conf)
 
-    globalenvConfig = config_client.GetConfig("/GlobalEnv/")
-    globalConfig = json.loads(globalenvConfig)
-    logger = configure_logging(globalConfig['PY_LOG_LEVEL'].upper(),
+    global_env_config = config_client.GetConfig("/GlobalEnv/")
+    global_config = json.loads(global_env_config)
+    logger = configure_logging(global_config['PY_LOG_LEVEL'].upper(),
                                __name__, dev_mode)
 
-    visualizerConfig = config_client.GetConfig("/" + app_name + "/config")
-    jsonConfig = json.loads(visualizerConfig)
+    visualizer_config = config_client.GetConfig("/" + app_name + "/config")
+    json_config = json.loads(visualizer_config)
 
-    topicsList = EnvConfig.get_topics_from_env("sub")
-    queueDict = {}
-    topicsList = EnvConfig.get_topics_from_env("sub")
+    topics_list = EnvConfig.get_topics_from_env("sub")
+    queue_dict = {}
+    topics_list = EnvConfig.get_topics_from_env("sub")
 
-    subDict = {}
-    for subtopic in topicsList:
+    sub_dict = {}
+    for subtopic in topics_list:
         publisher, topic = subtopic.split("/")
-        subDict[topic] = publisher
+        sub_dict[topic] = publisher
 
     topic_config_list = []
-    queueDict[topic_name] = queue.Queue(maxsize=10)
+    queue_dict[topic_name] = queue.Queue(maxsize=10)
     msgbus_cfg = EnvConfig.get_messagebus_config(topic_name,
-                                                  "sub", subDict[topic_name],
-                                                  config_client, dev_mode)
+                                                 "sub", sub_dict[topic_name],
+                                                 config_client, dev_mode)
 
     mode_address = os.environ[topic_name + "_cfg"].split(",")
     mode = mode_address[0].strip()
@@ -374,23 +359,23 @@ def get_image_data(topic_name):
     topic_config = (topic_name, msgbus_cfg)
     topic_config_list.append(topic_config)
     try:
-        finalImage = get_blank_image(TEXT)
-        msg_bus_subscriber(topic_config_list, queueDict, logger,
-                           jsonConfig)
+        final_image = get_blank_image(TEXT)
+        msg_bus_subscriber(topic_config_list, queue_dict, logger,
+                           json_config)
         while True:
-            if topic_name in queueDict.keys():
-                if not queueDict[topic_name].empty():
-                    frame = queueDict[topic_name].get_nowait()
+            if topic_name in queue_dict.keys():
+                if not queue_dict[topic_name].empty():
+                    frame = queue_dict[topic_name].get_nowait()
                     ret, jpeg = cv2.imencode('.jpg', frame)
                     del frame
-                    finalImage = jpeg.tobytes()
+                    final_image = jpeg.tobytes()
                     del jpeg
             else:
                 msg_txt = "Topic Not Found: " + topic_name
-                finalImage = get_blank_image(msg_txt)
+                final_image = get_blank_image(msg_txt)
 
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + finalImage +
+                   b'Content-Type: image/jpeg\r\n\r\n' + final_image +
                    b'\r\n\r\n')
     except KeyboardInterrupt:
         logger.info('Quitting...')
@@ -399,13 +384,15 @@ def get_image_data(topic_name):
 
 
 def get_topic_list():
-    topicsList = EnvConfig.get_topics_from_env("sub")
-    finaltopicList = []
-    for topic in topicsList:
-        publisher, topic = topic.split("/")
+    """Get list of topics
+    """
+    topics_list = EnvConfig.get_topics_from_env("sub")
+    final_topic_list = []
+    for topic in topics_list:
+        _, topic = topic.split("/")
         topic = topic.strip()
-        finaltopicList.append(topic)
-    return finaltopicList
+        final_topic_list.append(topic)
+    return final_topic_list
 
 
 def assert_exists(path):
@@ -428,150 +415,154 @@ def set_header_tags(response):
     return response
 
 
-@app.route('/')
+@APP.route('/')
 def index():
-    dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
     """Video streaming home page."""
+    dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
     if not session.get('logged_in'):
         if dev_mode:
             session['logged_in'] = True
-            response = app.make_response(render_template('index.html',
+            response = APP.make_response(render_template('index.html',
                                                          nonce=NONCE))
             return set_header_tags(response)
-        else:
-            response = app.make_response(render_template('login.html',
-                                                         nonce=NONCE))
-            return set_header_tags(response)
-    else:
-        response = app.make_response(render_template('index.html',
+
+        response = APP.make_response(render_template('login.html',
                                                      nonce=NONCE))
         return set_header_tags(response)
 
+    response = APP.make_response(render_template('index.html',
+                                                 nonce=NONCE))
+    return set_header_tags(response)
 
-@app.route('/topics', methods=['GET'])
+
+@APP.route('/topics', methods=['GET'])
 def return_topics():
+    """Returns topics list over http
+    """
     if not session.get('logged_in'):
-        response = app.make_response(render_template('login.html',
+        response = APP.make_response(render_template('login.html',
                                                      nonce=NONCE))
         return set_header_tags(response)
-    else:
-        return Response(str(get_topic_list()))
+
+    return Response(str(get_topic_list()))
 
 
-@app.route('/<topic_name>', methods=['GET'])
+@APP.route('/<topic_name>', methods=['GET'])
 def render_image(topic_name):
+    """Renders images over http
+    """
     if topic_name in get_topic_list():
         if not session.get('logged_in'):
-            response = app.make_response(render_template('login.html',
+            response = APP.make_response(render_template('login.html',
                                                          nonce=NONCE))
             return set_header_tags(response)
-        else:
-            return Response(get_image_data(topic_name),
-                            mimetype='multipart/x-mixed-replace;\
-                                      boundary=frame')
-    else:
-        return Response("Invalid Request")
+
+        return Response(get_image_data(topic_name),
+                        mimetype='multipart/x-mixed-replace;\
+                                  boundary=frame')
+
+    return Response("Invalid Request")
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@APP.route('/login', methods=['GET', 'POST'])
 def login():
+    """The main login page for WebVisualizer
+    """
     assert len(request.url) < 2000, "Request URL size exceeds browser limit"
     if request.method == 'GET':
         if not session.get('logged_in'):
-            response = app.make_response(render_template('login.html',
+            response = APP.make_response(render_template('login.html',
                                                          nonce=NONCE))
             return set_header_tags(response)
-        else:
-            return index()
 
-    elif request.method == 'POST':
+        return index()
+
+    if request.method == 'POST':
         app_name = os.environ["AppName"]
         conf = Util.get_crypto_dict(app_name)
         cfg_mgr = ConfigManager()
         config_client = cfg_mgr.get_config_client("etcd", conf)
-        visualizerConfig = config_client.GetConfig("/" + app_name + "/config")
+        visualizer_config = config_client.GetConfig("/" + app_name + "/config")
 
-        jsonConfig = json.loads(visualizerConfig)
+        json_config = json.loads(visualizer_config)
         dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
         # global MAX_FAILED_LOGIN_ATTEMPTS
-        global number_of_login_attempts
+        global NUMBER_OF_LOGIN_ATTEMPTS
         if dev_mode:
             session['logged_in'] = True
         else:
-            if request.form['username'] == jsonConfig['username'] \
-               and request.form['password'] == jsonConfig['password']:
+            if request.form['username'] == json_config['username'] \
+               and request.form['password'] == json_config['password']:
                 session['logged_in'] = True
-                number_of_login_attempts = 0
+                NUMBER_OF_LOGIN_ATTEMPTS = 0
                 return index()
-            else:
-                response = app.make_response(render_template('login.html',
+
+            response = APP.make_response(render_template('login.html',
+                                                         nonce=NONCE,
+                                                         Message="Invalid\
+                                                            Login"))
+            NUMBER_OF_LOGIN_ATTEMPTS += 1
+            if NUMBER_OF_LOGIN_ATTEMPTS == MAX_FAILED_LOGIN_ATTEMPTS:
+                response = APP.make_response(render_template('login.html',
                                                              nonce=NONCE,
-                                                             Message="Invalid\
-                                                             Login"))
-                number_of_login_attempts += 1
-                if(number_of_login_attempts == MAX_FAILED_LOGIN_ATTEMPTS):
-                    response = app.make_response(render_template('login.html',
-                                                                 nonce=NONCE,
-                                                                 Message="\
-                                                                 Invalid\
-                                                                 Login. Retry\
-                                                                 after a while\
-                                                                 ."))
-                    time.sleep(random.randint(3, 10))
-                    number_of_login_attempts = 0
-                # Random sleep between 0.1 to 0.5secs on InvalidLogin response.
-                # SDLE
-                time.sleep(random.uniform(0.1, 0.5))
-                return set_header_tags(response)
+                                                             Message="\
+                                                                Invalid\
+                                                                Login. Retry\
+                                                                after a while\
+                                                                ."))
+                time.sleep(random.randint(3, 10))
+                NUMBER_OF_LOGIN_ATTEMPTS = 0
+            # Random sleep between 0.1 to 0.5secs on InvalidLogin response.
+            # SDLE
+            time.sleep(random.uniform(0.1, 0.5))
+            return set_header_tags(response)
     else:
         return Response("Only GET and POST methods are supported.")
     return index()
 
 
-@app.route('/logout', methods=['GET'])
+@APP.route('/logout', methods=['GET'])
 def logout():
+    """Logout page for WebVisualizer
+    """
     dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
     if not dev_mode:
         session['logged_in'] = False
     return login()
 
 
-if __name__ == '__main__':
+def main():
+    """Main Method for WebVisualizer App
+    """
 
-    # Parse command line arguments
-    args = parse_args()
-
-    app.secret_key = os.urandom(24)
+    APP.secret_key = os.urandom(24)
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
     app_name = os.environ["AppName"]
     conf = Util.get_crypto_dict(app_name)
     cfg_mgr = ConfigManager()
     config_client = cfg_mgr.get_config_client("etcd", conf)
-    visualizerConfig = config_client.GetConfig("/" + app_name + "/config")
+    visualizer_config = config_client.GetConfig("/" + app_name + "/config")
 
     # Validating config against schema
     with open('./schema.json', "rb") as infile:
         schema = infile.read()
-        if (Util.validate_json(schema, visualizerConfig)) is not True:
+        if (Util.validate_json(schema, visualizer_config)) is not True:
             sys.exit(1)
 
-    jsonConfig = json.loads(visualizerConfig)
+    json_config = json.loads(visualizer_config)
 
-    globalenvConfig = config_client.GetConfig("/GlobalEnv/")
-    globalConfig = json.loads(globalenvConfig)
+    global_env_config = config_client.GetConfig("/GlobalEnv/")
+    global_config = json.loads(global_env_config)
 
-    if globalConfig['PY_LOG_LEVEL'].lower() == 'debug':
-        flaskDebug = True
-    else:
-        flaskDebug = False
+    flask_debug = bool(global_config['PY_LOG_LEVEL'].lower() == 'debug')
 
     if dev_mode:
-        app.run(host='0.0.0.0', port=jsonConfig['port'],
-                debug=flaskDebug, threaded=True)
+        APP.run(host='0.0.0.0', port=json_config['port'],
+                debug=flask_debug, threaded=True)
     else:
         # For Secure Session Cookie
-        app.config.update(SESSION_COOKIE_SECURE=True)
+        APP.config.update(SESSION_COOKIE_SECURE=True)
         server_cert = config_client.GetConfig("/" + app_name + "/server_cert")
         server_key = config_client.GetConfig("/" + app_name + "/server_key")
 
@@ -589,5 +580,9 @@ if __name__ == '__main__':
         context.load_cert_chain(server_cert_temp.name, server_key_temp.name)
         server_cert_temp.close()
         server_key_temp.close()
-        app.run(host='0.0.0.0', port=jsonConfig['port'],
-                debug=flaskDebug, threaded=True, ssl_context=context)
+        APP.run(host='0.0.0.0', port=json_config['port'],
+                debug=flask_debug, threaded=True, ssl_context=context)
+
+
+if __name__ == '__main__':
+    main()
