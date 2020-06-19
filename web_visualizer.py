@@ -64,8 +64,7 @@ class SubscriberCallback:
     callback in to EIS.
     """
     def __init__(self, topic_queue_dict, logger, good_color=(0, 255, 0),
-                 bad_color=(0, 0, 255), display=None,
-                 labels=None):
+                 bad_color=(0, 0, 255), labels=None):
         """Constructor
 
         :param topic_queue_dict: Dictionary to maintain multiple queues.
@@ -84,7 +83,6 @@ class SubscriberCallback:
         self.good_color = good_color
         self.bad_color = bad_color
         self.labels = labels
-        self.display = display
         self.msg_frame_queue = queue.Queue(maxsize=15)
 
     def queue_publish(self, topic, frame):
@@ -216,7 +214,7 @@ class SubscriberCallback:
         for res in results:
             if "Fps" in res:
                 fps_str = "{} : {}".format(str(res), str(results[res]))
-                self.logger.debug(fps_str)
+                self.logger.info(fps_str)
                 cv2.putText(frame, fps_str, (x_cord, y_cord),
                             cv2.FONT_HERSHEY_DUPLEX, 0.5,
                             self.good_color, 1, cv2.LINE_AA)
@@ -277,11 +275,9 @@ class SubscriberCallback:
             if metadata is not None and blob is not None:
                 results, frame = self.draw_defect(metadata, blob,
                                                   stream_label)
-                if self.display:
-                    del results
-                    self.queue_publish(topic, frame)
-                else:
-                    self.logger.debug(f'Classifier results: {results}')
+
+                del results
+                self.queue_publish(topic, frame)
             else:
                 self.logger.debug(f'Non Image Data Subscription\
                                  : Classifier_results: {metadata}')
@@ -292,7 +288,7 @@ def msg_bus_subscriber(topic_config_list, queue_dict, logger, json_config):
     subscribe to classified results
     """
     sub_cbk = SubscriberCallback(queue_dict, logger,
-                                 display=True, labels=json_config["labels"])
+                                 labels=json_config["labels"])
 
     for topic_config in topic_config_list:
         topic, msgbus_cfg = topic_config
