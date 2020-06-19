@@ -37,8 +37,7 @@
                 "Name": "web-vis-in",
                 "Endtype": "client",
                 "DataType": "messages",
-                "Link": "va-output",
-                "Port": "29170"
+                "Link": "va-output"
             }
         ]
     },
