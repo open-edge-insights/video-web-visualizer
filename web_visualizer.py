@@ -145,7 +145,7 @@ class SubscriberCallback:
             except cv2.error as ex:
                 self.logger.error("frame: {}, exception: {}".format(frame, ex))
         else:
-            self.logger.info("Encoding not enabled...")
+            self.logger.debug("Encoding not enabled...")
             frame = np.reshape(frame, (height, width, channels))
 
         # Draw defects for Gva
@@ -226,7 +226,7 @@ class SubscriberCallback:
         for res in results:
             if "Fps" in res:
                 fps_str = "{} : {}".format(str(res), str(results[res]))
-                self.logger.debug(fps_str)
+                self.logger.info(fps_str)
                 cv2.putText(frame, fps_str, (x, y),
                             cv2.FONT_HERSHEY_DUPLEX, 0.5,
                             self.good_color, 1, cv2.LINE_AA)
@@ -288,7 +288,7 @@ class SubscriberCallback:
                     del results
                     self.queue_publish(topic, frame)
                 else:
-                    self.logger.info(f'Classifier_results: {results}')
+                    self.logger.debug(f'Classifier results: {results}')
             else:
                 self.logger.debug(f'Non Image Data Subscription\
                                  : Classifier_results: {data}')
