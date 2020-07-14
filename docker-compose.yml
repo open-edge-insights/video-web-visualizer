@@ -61,7 +61,7 @@ services:
       # For default video streaming usecase alone
       SubTopics: "VideoAnalytics/camera1_stream_results"
       camera1_stream_results_cfg : "zmq_tcp,127.0.0.1:65013"
-
+    user: ${EIS_UID}
     volumes:
       - "vol_eis_socket:${SOCKET_DIR}"
       - "vol_temp_webv:/var/tmp"
