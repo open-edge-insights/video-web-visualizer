@@ -558,7 +558,8 @@ def main():
                 debug=flask_debug, threaded=True)
     else:
         # For Secure Session Cookie
-        APP.config.update(SESSION_COOKIE_SECURE=True)
+        APP.config.update(SESSION_COOKIE_SECURE=True,
+                          SESSION_COOKIE_SAMESITE='Lax')
         server_cert = config_client.GetConfig("/" + app_name + "/server_cert")
         server_key = config_client.GetConfig("/" + app_name + "/server_key")
 
