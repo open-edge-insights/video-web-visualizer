@@ -39,6 +39,7 @@ services:
     hostname: ia_web_visualizer
     network_mode: host
     restart: unless-stopped
+    ipc: "none"
     environment:
       AppName: "WebVisualizer"
       DEV_MODE: ${DEV_MODE}
