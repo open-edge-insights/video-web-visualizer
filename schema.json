@@ -17,6 +17,10 @@
     },
     "port": {
       "type": "integer"
+    },
+    "draw_results":{
+      "type": "string",
+      "default": "true"
     }
   }
 }

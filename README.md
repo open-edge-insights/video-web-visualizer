@@ -145,4 +145,15 @@ B) For Ingestor's **GVA** type, metadata structure sample is :
 ```
 where in `gva_meta` is a list of dicts.
 
-**NOTE**: Any data with in the list, tuple or dict of meta data should be of primitive data type (int, float, string, bool). Refer the examples given above.
+**NOTE**:
+
+1) Any data with in the list, tuple or dict of meta data should be of primitive data type (int, float, string, bool). Refer the examples given above.
+
+2)If user needs to remove the bounding box:
+
+  Set the value of draw_results in config.json as false for both Visualiser and WebVisualiser.
+
+    ```
+    draw_results: "false"
+    ```
+

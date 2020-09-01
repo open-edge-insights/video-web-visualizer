@@ -47,7 +47,6 @@ services:
       no_proxy: ${eis_no_proxy},${ETCD_HOST}
       ETCD_HOST: ${ETCD_HOST}
       ETCD_PREFIX: ${ETCD_PREFIX}
-
       # MessageBus Endpoint Configuration
       CertType: "zmq,pem"
       ZMQ_RECV_HWM: "50"
