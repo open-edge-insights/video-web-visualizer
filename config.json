@@ -1,5 +1,5 @@
 {
-    "/WebVisualizer/config": {
+    "config": {
         "username": "admin",
         "password": "admin@123",
         "port": 5000,
@@ -17,5 +17,5 @@
             }
         }
     },
-    "/WebVisualizer/interfaces": {}
+    "interfaces": {}
 }
