@@ -92,23 +92,9 @@ spec:
           value: "/run/secrets/etcd_WebVisualizer_cert/WebVisualizer_client_certificate.pem"
         - name: CONFIGMGR_KEY
           value: "/run/secrets/etcd_WebVisualizer_key/WebVisualizer_client_key.pem"
-          # MessageBus Endpoint Configuration
-        - name: ZMQ_RECV_HWM
-          value: "50"
+        - name: SUBSCRIBER_default_ENDPOINT
+          value: "videoanalytics:65013"
 
-          # Use IPC mode (zmq_ipc) when VideoIngestion, VideoAnalytics and Visualizer
-          # based containers are running on the same host. If they are running on diff
-          # host, please use TCP mode for communication.
-          # Eg: Stream cfg for
-          # IPC: zmq_ipc, <absolute_socket_directory_path>
-          # TPC: zmq_tcp, <publisher_host>:<publisher_port>
-
-          # For default video streaming usecase alone
-
-        - name:  SubTopics
-          value: "VideoAnalytics/camera1_stream_results"
-        - name: camera1_stream_results_cfg
-          value: "zmq_tcp,videoanalytics:65013"
 
       volumes:
       - name: eis-dev

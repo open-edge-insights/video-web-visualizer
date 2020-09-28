@@ -31,8 +31,6 @@ import random
 import ssl
 import secrets
 import tempfile
-from eis.config_manager import ConfigManager
-from eis.env_config import EnvConfig
 import eis.msgbus as mb
 import cv2
 from jinja2 import Environment, select_autoescape, FileSystemLoader
@@ -40,7 +38,7 @@ import numpy as np
 from flask import Flask, render_template, Response, request, session
 from util.util import Util
 from util.log import configure_logging
-
+import cfgmgr.config_manager as cfg
 
 TEXT = 'Disconnected'
 TEXTPOSITION = (10, 110)
@@ -58,7 +56,8 @@ ENV = Environment(loader=LOADER, autoescape=select_autoescape(
     enabled_extensions=('html'),
     default_for_string=True,))
 
-
+ctx = cfg.ConfigMgr()
+sub_ctx = ctx.get_subscriber_by_index(0)
 class SubscriberCallback:
     """Object for the databus callback to wrap needed state variables for the
     callback in to EIS.
@@ -329,45 +328,21 @@ def get_blank_image(text):
 def get_image_data(topic_name):
     """Get the Images from Zmq
     """
-    dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
+    dev_mode = ctx.is_dev_mode()
     # Initializing Etcd to set env variables
 
-    app_name = os.environ["AppName"]
-    conf = Util.get_crypto_dict(app_name)
+    topic_config_list = []
+    queue_dict = {}
 
-    cfg_mgr = ConfigManager()
-    config_client = cfg_mgr.get_config_client("etcd", conf)
-
-    global_env_config = config_client.GetConfig("/GlobalEnv/")
-    global_config = json.loads(global_env_config)
-    logger = configure_logging(global_config['PY_LOG_LEVEL'].upper(),
+    msgbus_cfg = sub_ctx.get_msgbus_config()
+    topics_list = sub_ctx.get_topics()
+    queue_dict[topics_list[0]] = queue.Queue(maxsize=10)
+    topic_config = (topics_list[0], msgbus_cfg)
+    topic_config_list.append(topic_config)
+    logger = configure_logging(os.environ['PY_LOG_LEVEL'].upper(),
                                __name__, dev_mode)
 
-    visualizer_config = config_client.GetConfig("/" + app_name + "/config")
-    json_config = json.loads(visualizer_config)
-
-    topics_list = EnvConfig.get_topics_from_env("sub")
-    queue_dict = {}
-    topics_list = EnvConfig.get_topics_from_env("sub")
-
-    sub_dict = {}
-    for subtopic in topics_list:
-        publisher, topic = subtopic.split("/")
-        sub_dict[topic] = publisher
-
-    topic_config_list = []
-    queue_dict[topic_name] = queue.Queue(maxsize=10)
-    msgbus_cfg = EnvConfig.get_messagebus_config(topic_name,
-                                                 "sub", sub_dict[topic_name],
-                                                 config_client, dev_mode)
-
-    mode_address = os.environ[topic_name + "_cfg"].split(",")
-    mode = mode_address[0].strip()
-    if (not dev_mode and mode == "zmq_tcp"):
-        for key in msgbus_cfg[topic_name]:
-            if msgbus_cfg[topic_name][key] is None:
-                raise ValueError("Invalid Config")
-
+    json_config = ctx.get_app_config()
     topic_config = (topic_name, msgbus_cfg)
     topic_config_list.append(topic_config)
     try:
@@ -398,13 +373,8 @@ def get_image_data(topic_name):
 def get_topic_list():
     """Get list of topics
     """
-    topics_list = EnvConfig.get_topics_from_env("sub")
-    final_topic_list = []
-    for topic in topics_list:
-        _, topic = topic.split("/")
-        topic = topic.strip()
-        final_topic_list.append(topic)
-    return final_topic_list
+    topics_list = sub_ctx.get_topics()
+    return topics_list
 
 
 def assert_exists(path):
@@ -430,7 +400,7 @@ def set_header_tags(response):
 @APP.route('/')
 def index():
     """Video streaming home page."""
-    dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
+    dev_mode = ctx.is_dev_mode()
     if not session.get('logged_in'):
         if dev_mode:
             session['logged_in'] = True
@@ -490,14 +460,8 @@ def login():
         return index()
 
     if request.method == 'POST':
-        app_name = os.environ["AppName"]
-        conf = Util.get_crypto_dict(app_name)
-        cfg_mgr = ConfigManager()
-        config_client = cfg_mgr.get_config_client("etcd", conf)
-        visualizer_config = config_client.GetConfig("/" + app_name + "/config")
-
-        json_config = json.loads(visualizer_config)
-        dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
+        json_config = ctx.get_app_config()
+        dev_mode = ctx.is_dev_mode()
         # global MAX_FAILED_LOGIN_ATTEMPTS
         global NUMBER_OF_LOGIN_ATTEMPTS
         if dev_mode:
@@ -537,7 +501,7 @@ def login():
 def logout():
     """Logout page for WebVisualizer
     """
-    dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
+    dev_mode = ctx.is_dev_mode()
     if not dev_mode:
         session['logged_in'] = False
     return login()
@@ -546,28 +510,19 @@ def logout():
 def main():
     """Main Method for WebVisualizer App
     """
-
     APP.secret_key = os.urandom(24)
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-    dev_mode = bool(strtobool(os.environ["DEV_MODE"]))
-    app_name = os.environ["AppName"]
-    conf = Util.get_crypto_dict(app_name)
-    cfg_mgr = ConfigManager()
-    config_client = cfg_mgr.get_config_client("etcd", conf)
-    visualizer_config = config_client.GetConfig("/" + app_name + "/config")
+    dev_mode = ctx.is_dev_mode()
+
+    json_config = ctx.get_app_config()
 
     # Validating config against schema
     with open('./schema.json', "rb") as infile:
         schema = infile.read()
-        if (Util.validate_json(schema, visualizer_config)) is not True:
+        if (Util.validate_json(schema, json.dumps(json_config.get_dict()))) is not True:
             sys.exit(1)
-
-    json_config = json.loads(visualizer_config)
-
-    global_env_config = config_client.GetConfig("/GlobalEnv/")
-    global_config = json.loads(global_env_config)
-
-    flask_debug = bool(global_config['PY_LOG_LEVEL'].lower() == 'debug')
+    
+    flask_debug = bool(os.environ['PY_LOG_LEVEL'].lower() == 'debug')
 
     if dev_mode:
         APP.run(host='0.0.0.0', port=json_config['port'],
@@ -576,8 +531,9 @@ def main():
         # For Secure Session Cookie
         APP.config.update(SESSION_COOKIE_SECURE=True,
                           SESSION_COOKIE_SAMESITE='Lax')
-        server_cert = config_client.GetConfig("/" + app_name + "/server_cert")
-        server_key = config_client.GetConfig("/" + app_name + "/server_key")
+
+        server_cert = json_config["server_cert"]
+        server_key = json_config["server_key"]       
 
         # Since Python SSL Load Cert Chain Method is not having option to load
         # Cert from Variable. So for now we are going below method
