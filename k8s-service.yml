@@ -53,7 +53,7 @@ spec:
       nodeName: master-node
       containers:
       - name: ia-web-visualizer
-        image: ia_web_visualizer:${EIS_VERSION}
+        image: ${DOCKER_REGISTRY}ia_web_visualizer:${EIS_VERSION}
         volumeMounts:
         - name: eis-dev
           mountPath: /dev
