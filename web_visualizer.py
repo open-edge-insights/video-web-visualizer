@@ -35,11 +35,11 @@ import eis.msgbus as mb
 import cv2
 from jinja2 import Environment, select_autoescape, FileSystemLoader
 import numpy as np
-from flask import Flask, render_template, Response, request, session
+from flask import Flask, render_template, Response, request, session 
 from util.util import Util
 from util.log import configure_logging
-from util.common import Visualizer
 import cfgmgr.config_manager as cfg
+from util.common import Visualizer
 
 TEXT = 'Disconnected'
 TEXTPOSITION = (10, 110)
@@ -57,9 +57,11 @@ ENV = Environment(loader=LOADER, autoescape=select_autoescape(
     enabled_extensions=('html'),
     default_for_string=True,))
 
+# Config manager initialization
 ctx = cfg.ConfigMgr()
-sub_ctx = ctx.get_subscriber_by_index(0)
-
+queue_dict = {}
+topic_config_list = []
+topics_list = []
 
 def msg_bus_subscriber(topic_config_list, queue_dict, logger, json_config):
     """msg_bus_subscriber is the ZeroMQ callback to
@@ -87,7 +89,7 @@ def get_blank_image(text):
     _, jpeg = cv2.imencode('.jpg', blank_image)
     final_image = jpeg.tobytes()
     return final_image
-
+     
 
 def get_image_data(topic_name):
     """Get the Images from Zmq
@@ -95,20 +97,10 @@ def get_image_data(topic_name):
     dev_mode = ctx.is_dev_mode()
     # Initializing Etcd to set env variables
 
-    topic_config_list = []
-    queue_dict = {}
-
-    msgbus_cfg = sub_ctx.get_msgbus_config()
-    topics_list = sub_ctx.get_topics()
-    queue_dict[topics_list[0]] = queue.Queue(maxsize=10)
-    topic_config = (topics_list[0], msgbus_cfg)
-    topic_config_list.append(topic_config)
     logger = configure_logging(os.environ['PY_LOG_LEVEL'].upper(),
                                __name__, dev_mode)
 
     json_config = ctx.get_app_config()
-    topic_config = (topic_name, msgbus_cfg)
-    topic_config_list.append(topic_config)
     try:
         final_image = get_blank_image(TEXT)
         msg_bus_subscriber(topic_config_list, queue_dict, logger,
@@ -134,13 +126,6 @@ def get_image_data(topic_name):
         logger.exception('Error during execution:')
 
 
-def get_topic_list():
-    """Get list of topics
-    """
-    topics_list = sub_ctx.get_topics()
-    return topics_list
-
-
 def assert_exists(path):
     """Assert given path exists.
 
@@ -161,6 +146,7 @@ def set_header_tags(response):
     return response
 
 
+    
 @APP.route('/')
 def index():
     """Video streaming home page."""
@@ -171,7 +157,6 @@ def index():
             response = APP.make_response(render_template('index.html',
                                                          nonce=NONCE))
             return set_header_tags(response)
-
         response = APP.make_response(render_template('login.html',
                                                      nonce=NONCE))
         return set_header_tags(response)
@@ -190,14 +175,14 @@ def return_topics():
                                                      nonce=NONCE))
         return set_header_tags(response)
 
-    return Response(str(get_topic_list()))
+    return Response(str(topics_list))
 
 
 @APP.route('/<topic_name>', methods=['GET'])
 def render_image(topic_name):
     """Renders images over http
     """
-    if topic_name in get_topic_list():
+    if topic_name in topics_list:
         if not session.get('logged_in'):
             response = APP.make_response(render_template('login.html',
                                                          nonce=NONCE))
@@ -277,19 +262,35 @@ def main():
     APP.secret_key = os.urandom(24)
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     dev_mode = ctx.is_dev_mode()
-
+    
     json_config = ctx.get_app_config()
+
 
     # Validating config against schema
     with open('./schema.json', "rb") as infile:
         schema = infile.read()
-        if not (Util.validate_json(schema,
-                                   json.dumps(json_config.get_dict()))):
+        if (Util.validate_json(schema, json.dumps(json_config.get_dict()))) is not True:
             sys.exit(1)
+    
+    num_of_subscribers = ctx.get_num_subscribers()
+    for index in range(num_of_subscribers):
+        # Fetching subscriber element based on index
+        sub_ctx = ctx.get_subscriber_by_index(index)
+        # Fetching msgbus config of subscriber
+        msgbus_cfg = sub_ctx.get_msgbus_config()
+        # Fetching topics of subscriber
+        topic = sub_ctx.get_topics()[0]
+        # Adding topic & msgbus_config to
+        # topic_config tuple
+        topic_config = (topic, msgbus_cfg)
+        topic_config_list.append(topic_config)
+        topics_list.append(topic)
+        queue_dict[topic] = queue.Queue(maxsize=10)
 
     flask_debug = bool(os.environ['PY_LOG_LEVEL'].lower() == 'debug')
 
     if dev_mode:
+        
         APP.run(host='0.0.0.0', port=json_config['port'],
                 debug=flask_debug, threaded=True)
     else:
@@ -298,7 +299,7 @@ def main():
                           SESSION_COOKIE_SAMESITE='Lax')
 
         server_cert = json_config["server_cert"]
-        server_key = json_config["server_key"]
+        server_key = json_config["server_key"]       
 
         # Since Python SSL Load Cert Chain Method is not having option to load
         # Cert from Variable. So for now we are going below method
