@@ -50,7 +50,6 @@ spec:
       labels:
         app: webvisualizer
     spec:
-      nodeName: master-node
       containers:
       - name: ia-web-visualizer
         image: ${DOCKER_REGISTRY}ia_web_visualizer:${EIS_VERSION}
