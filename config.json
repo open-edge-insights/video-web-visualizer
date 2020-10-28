@@ -3,6 +3,7 @@
         "username": "admin",
         "password": "admin@123",
         "port": 5000,
+        "dev_port": 5001,
         "draw_results": "true",
         "labels" : {
             "camera1_stream_results": {

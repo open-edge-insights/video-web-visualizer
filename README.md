@@ -20,7 +20,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 
   #### DEV mode
     * Goto Browser
-        http://localhost:5000
+        http://localhost:5001
 
   #### PROD Mode:
     * Import 'ca_certificate.pem' from 'build/provision/Certificates/ca' Directory to your Browser Certifcates.
@@ -43,6 +43,8 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 -----
 **NOTE**:
 1. The admin has to make sure all the necessary config is set in etcd before starting the web visualizer.
+2. Please clear your `browsers cache` while switching from `prod` mode to `dev` mode on running 
+`WebVisualizer` in browser.
 
 #### Using Labels
 
@@ -65,6 +67,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 "/WebVisualizer/config": {
         "username": "admin",
         "password": "admin@123",
+        "dev_port": 5001,
         "port": 5000,
         "labels" : {
             "camera1_stream": {

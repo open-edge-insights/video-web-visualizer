@@ -291,7 +291,7 @@ def main():
 
     if dev_mode:
         
-        APP.run(host='0.0.0.0', port=json_config['port'],
+        APP.run(host='0.0.0.0', port=json_config['dev_port'],
                 debug=flask_debug, threaded=True)
     else:
         # For Secure Session Cookie

@@ -28,9 +28,14 @@ spec:
   selector:
     app: webvisualizer
   ports:
-    - port: 5000
+    - name: https
+      port: 5000
       targetPort: 5000
       nodePort: 30007
+    - name: http
+      port: 5001
+      targetPort: 5001
+      nodePort: 30009
 ---
 apiVersion: apps/v1
 kind: Deployment
