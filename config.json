@@ -10,12 +10,26 @@
                 "0": "MISSING",
                 "1": "SHORT"
             },
-            "camera2_stream_results":{
+            "native_safety_gear_stream_results": {
+                "1": "safety_helmet",
+                "2": "safety_jacket",
+                "3": "Safe",
+                "4": "Violation"
+            },
+            "py_safety_gear_stream_results": {
+                "1": "safety_helmet",
+                "2": "safety_jacket",
+                "3": "Safe",
+                "4": "Violation"
+
+            },
+            "gva_safety_gear_stream_results": {
                 "1": "safety_helmet",
                 "2": "safety_jacket",
                 "3": "Safe",
                 "4": "Violation"
             }
+
         }
     },
     "interfaces": {
@@ -30,7 +44,7 @@
                 ]
             }
         ]
-    } 
+    }
 
-} 
-  
+}
+
