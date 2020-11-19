@@ -56,4 +56,6 @@ COPY --from=common /usr/local/lib/python3.6/dist-packages/ /usr/local/lib/python
 
 COPY . .
 
+HEALTHCHECK NONE
+
 ENTRYPOINT ["python3.6", "web_visualizer.py"]
