@@ -23,15 +23,23 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
         http://localhost:5001
 
   #### PROD Mode:
-    * Import 'ca_certificate.pem' from 'build/provision/Certificates/ca' Directory to your Browser Certifcates.
+    * copy 'ca_certificate.pem' from 'build/provision/Certificates/ca' to home directory '~/'
+      and give appropriate permissions to it as shown below:
+
+    ```
+        $ sudo cp Certificates/ca/ca_certificate.pem ~
+        $ cd ~
+        $ sudo chmod 0755 ~/ca_certificate.pem
+    ```
+
+    * Import 'ca_certificate.pem' from home Directory '~/' to your Browser Certifcates.
 
       ##### Steps to Import Certificates
         * Goto *Settings* in Chrome
         * Search *Manage Certificates* Under Privacy & Security
         * Select Manage Certificates Option
         * Under *Authorities* Tab Click Import Button
-        * With Import Wizard navigate to
-          *IEdgeInsights/build/provision/Certificates/ca* Dir
+        * With Import Wizard navigate to home directory
         * Select *ca_certificate.pem* file
         * Select All CheckBoxes and Click Import Button.
 
