@@ -2,7 +2,7 @@
     "SchemaVersion": "0.2",
     "Runtime": "docker",
     "RuntimeOptions": {
-        "ContainerImage": "ia_web_visualizer:$EIS_VERSION"
+        "ContainerImage": "${idx:ia_web_visualizer:$EIS_VERSION}"
     },
     "DataStore": {
         "Protocol": "DIRECT",
