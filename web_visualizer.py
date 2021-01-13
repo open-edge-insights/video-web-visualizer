@@ -35,7 +35,7 @@ import eis.msgbus as mb
 import cv2
 from jinja2 import Environment, select_autoescape, FileSystemLoader
 import numpy as np
-from flask import Flask, render_template, Response, request, session 
+from flask import Flask, render_template, Response, request, session
 from util.util import Util
 from util.log import configure_logging
 import cfgmgr.config_manager as cfg
@@ -63,6 +63,7 @@ queue_dict = {}
 topic_config_list = []
 topics_list = []
 
+
 def msg_bus_subscriber(topic_config_list, queue_dict, logger, json_config):
     """msg_bus_subscriber is the ZeroMQ callback to
     subscribe to classified results
@@ -89,7 +90,7 @@ def get_blank_image(text):
     _, jpeg = cv2.imencode('.jpg', blank_image)
     final_image = jpeg.tobytes()
     return final_image
-     
+
 
 def get_image_data(topic_name):
     """Get the Images from Zmq
@@ -146,7 +147,6 @@ def set_header_tags(response):
     return response
 
 
-    
 @APP.route('/')
 def index():
     """Video streaming home page."""
@@ -262,16 +262,16 @@ def main():
     APP.secret_key = os.urandom(24)
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     dev_mode = ctx.is_dev_mode()
-    
-    json_config = ctx.get_app_config()
 
+    json_config = ctx.get_app_config()
 
     # Validating config against schema
     with open('./schema.json', "rb") as infile:
         schema = infile.read()
-        if (Util.validate_json(schema, json.dumps(json_config.get_dict()))) is not True:
+        if not (Util.validate_json(schema,
+                                   json.dumps(json_config.get_dict()))):
             sys.exit(1)
-    
+
     num_of_subscribers = ctx.get_num_subscribers()
     for index in range(num_of_subscribers):
         # Fetching subscriber element based on index
@@ -290,7 +290,7 @@ def main():
     flask_debug = bool(os.environ['PY_LOG_LEVEL'].lower() == 'debug')
 
     if dev_mode:
-        
+
         APP.run(host='0.0.0.0', port=json_config['dev_port'],
                 debug=flask_debug, threaded=True)
     else:
@@ -299,7 +299,7 @@ def main():
                           SESSION_COOKIE_SAMESITE='Lax')
 
         server_cert = json_config["server_cert"]
-        server_key = json_config["server_key"]       
+        server_key = json_config["server_key"]
 
         # Since Python SSL Load Cert Chain Method is not having option to load
         # Cert from Variable. So for now we are going below method
