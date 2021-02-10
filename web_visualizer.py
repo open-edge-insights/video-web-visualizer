@@ -64,7 +64,7 @@ topic_config_list = []
 topics_list = []
 
 
-def msg_bus_subscriber(topic_config_list, queue_dict, logger, json_config):
+def msg_bus_subscriber(topic_name, logger, json_config):
     """msg_bus_subscriber is the ZeroMQ callback to
     subscribe to classified results
     """
@@ -73,11 +73,14 @@ def msg_bus_subscriber(topic_config_list, queue_dict, logger, json_config):
                             draw_results=json_config["draw_results"])
 
     for topic_config in topic_config_list:
+
         topic, msgbus_cfg = topic_config
 
-        callback_thread = threading.Thread(target=visualizer.callback,
-                                           args=(msgbus_cfg, topic, ))
-        callback_thread.start()
+        if topic_name == topic:
+            callback_thread = threading.Thread(target=visualizer.callback,
+                                            args=(msgbus_cfg, topic, ))
+            callback_thread.start()
+            break
 
 
 def get_blank_image(text):
@@ -104,8 +107,7 @@ def get_image_data(topic_name):
     json_config = ctx.get_app_config()
     try:
         final_image = get_blank_image(TEXT)
-        msg_bus_subscriber(topic_config_list, queue_dict, logger,
-                           json_config)
+        msg_bus_subscriber(topic_name, logger, json_config)
         while True:
             if topic_name in queue_dict.keys():
                 if not queue_dict[topic_name].empty():
