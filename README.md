@@ -1,11 +1,11 @@
 # Intel Edge Insights Web Visualizer
-Web Visualizer ia a web based app to view the classified images/metadata coming out of EIS.
+Web Visualizer ia a web based app to view the classified images/metadata coming out of EII.
 
 
 #### Steps to build and run web viualizer
 
-* Follow [provision/README.md](../README#provision-eis.md) for EIS provisioning
-  if not done already as part of EIS stack setup
+* Follow [provision/README.md](../README#provision.md) for Provisioning
+  if not done already as part of EII stack setup
 
 * Running visualizer as a container from [build](../../build):
 
@@ -56,9 +56,9 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 
 #### Using Labels
 
-  In order to have the web visualizer label each of the defects on the image, labels in JSON format(with mapping between topic subscribed text to be displayed) has to be provided in [config.json](./config.json) file and run the [eis_builder.py](../build/eis_builder.py) script using the below command.
+  In order to have the web visualizer label each of the defects on the image, labels in JSON format(with mapping between topic subscribed text to be displayed) has to be provided in [config.json](./config.json) file and run the [builder.py](../build/builder.py) script using the below command.
   ```sh
-  $ python3 eis_builder.py
+  $ python3 builder.py
   ```
 
   An example of what this JSON value should look like is shown below. In this case
@@ -71,7 +71,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
       "1": "SHORT"
   }
   ```
-  > **NOTE:** These labels are the mapping for the PCB demo provided in EIS's web visualizer directory. Currently camera1_stream_results consists of pcb demo labeling and camera2_stream_results consists of safety demo labeling.
+  > **NOTE:** These labels are the mapping for the PCB demo provided in EII's web visualizer directory. Currently camera1_stream_results consists of pcb demo labeling and camera2_stream_results consists of safety demo labeling.
   Hence, in [config.json](./config.json), mapping of all the subscribed topics has to be done with pcb demo labeling and safety demo labeling respectively.
 
   ```json
@@ -111,8 +111,8 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 
 ### Metadata Structure
 
-EIS WebVisualizer app can decode certain types of mete-data formats for drawing the defects on the image.
-Any application wanting to use EIS WebVisualizer need to comply with the meta-data format as described below:
+EII WebVisualizer app can decode certain types of mete-data formats for drawing the defects on the image.
+Any application wanting to use EII WebVisualizer need to comply with the meta-data format as described below:
 
 A) For Ingestor's **Non-GVA** type, metadata structure sample is :
 
