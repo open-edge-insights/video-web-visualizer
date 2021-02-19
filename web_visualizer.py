@@ -78,7 +78,7 @@ def msg_bus_subscriber(topic_name, logger, json_config):
 
         if topic_name == topic:
             callback_thread = threading.Thread(target=visualizer.callback,
-                                            args=(msgbus_cfg, topic, ))
+                                               args=(msgbus_cfg, topic, ))
             callback_thread.start()
             break
 
