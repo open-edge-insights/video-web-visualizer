@@ -20,9 +20,9 @@
 
 # Dockerfile for WebVisualizer
 
-ARG EIS_VERSION
+ARG EII_VERSION
 ARG DOCKER_REGISTRY
-FROM ${DOCKER_REGISTRY}ia_eisbase:$EIS_VERSION as eisbase
+FROM ${DOCKER_REGISTRY}ia_eiibase:$EII_VERSION as eiibase
 LABEL description="Web Visualizer Image"
 
 WORKDIR ${PY_WORK_DIR}
@@ -38,14 +38,14 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 
-ARG EIS_USER_NAME
-RUN adduser --quiet --disabled-password ${EIS_USER_NAME}
+ARG EII_USER_NAME
+RUN adduser --quiet --disabled-password ${EII_USER_NAME}
 
 ENV PYTHONPATH ${PY_WORK_DIR}/
 
-FROM ${DOCKER_REGISTRY}ia_common:$EIS_VERSION as common
+FROM ${DOCKER_REGISTRY}ia_common:$EII_VERSION as common
 
-FROM eisbase
+FROM eiibase
 
 COPY --from=common ${GO_WORK_DIR}/common/libs ${PY_WORK_DIR}/libs
 COPY --from=common ${GO_WORK_DIR}/common/util ${PY_WORK_DIR}/util

@@ -29,12 +29,12 @@ services:
       context: $PWD/../WebVisualizer
       dockerfile: $PWD/../WebVisualizer/Dockerfile
       args:
-        EIS_VERSION: ${EIS_VERSION}
-        EIS_UID: ${EIS_UID}
-        EIS_USER_NAME: ${EIS_USER_NAME}
+        EII_VERSION: ${EII_VERSION}
+        EII_UID: ${EII_UID}
+        EII_USER_NAME: ${EII_USER_NAME}
         DOCKER_REGISTRY: ${DOCKER_REGISTRY}
     read_only: true
-    image: ${DOCKER_REGISTRY}ia_web_visualizer:${EIS_VERSION}
+    image: ${DOCKER_REGISTRY}ia_web_visualizer:${EII_VERSION}
     container_name: ia_web_visualizer
     hostname: ia_web_visualizer
     network_mode: host
@@ -49,14 +49,14 @@ services:
       AppName: "WebVisualizer"
       DEV_MODE: ${DEV_MODE}
       PROFILING_MODE: ${PROFILING_MODE}
-      no_proxy: ${eis_no_proxy},${ETCD_HOST}
+      no_proxy: ${eii_no_proxy},${ETCD_HOST}
       ETCD_HOST: ${ETCD_HOST}
       ETCD_CLIENT_PORT: ${ETCD_CLIENT_PORT}
       ETCD_PREFIX: ${ETCD_PREFIX}
       CertType: "zmq,pem"
-    user: ${EIS_UID}
+    user: ${EII_UID}
     volumes:
-      - "vol_eis_socket:${SOCKET_DIR}"
+      - "vol_eii_socket:${SOCKET_DIR}"
       - "vol_temp_webv:/var/tmp"
     secrets:
       - ca_etcd

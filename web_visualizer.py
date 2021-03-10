@@ -31,7 +31,7 @@ import random
 import ssl
 import secrets
 import tempfile
-import eis.msgbus as mb
+import eii.msgbus as mb
 import cv2
 from jinja2 import Environment, select_autoescape, FileSystemLoader
 import numpy as np
