@@ -22,40 +22,69 @@
 
 ARG EII_VERSION
 ARG DOCKER_REGISTRY
-FROM ${DOCKER_REGISTRY}ia_eiibase:$EII_VERSION as eiibase
-LABEL description="Web Visualizer Image"
-
-WORKDIR ${PY_WORK_DIR}
-
-RUN apt-get update && \
-    apt-get install -y unzip && \
-    mkdir static && \
-    wget https://github.com/twbs/bootstrap/releases/download/v4.0.0/bootstrap-4.0.0-dist.zip && \
-    unzip bootstrap-4.0.0-dist.zip -d static && \
-    wget https://code.jquery.com/jquery-3.4.1.min.js && \
-    cp jquery-3.4.1.min.js static/js/jquery.min.js
-
-COPY requirements.txt .
-RUN pip3 install -r requirements.txt
-
+ARG ARTIFACTS="/artifacts"
+ARG EII_UID
 ARG EII_USER_NAME
-RUN adduser --quiet --disabled-password ${EII_USER_NAME}
-
-ENV PYTHONPATH ${PY_WORK_DIR}/
-
+ARG UBUNTU_IMAGE_VERSION
+FROM ${DOCKER_REGISTRY}ia_eiibase:$EII_VERSION as base
 FROM ${DOCKER_REGISTRY}ia_common:$EII_VERSION as common
 
-FROM eiibase
+FROM base as builder
+LABEL description="Web Visualizer Image"
 
-COPY --from=common ${GO_WORK_DIR}/common/libs ${PY_WORK_DIR}/libs
-COPY --from=common ${GO_WORK_DIR}/common/util ${PY_WORK_DIR}/util
-COPY --from=common ${GO_WORK_DIR}/common/cmake ${PY_WORK_DIR}/common/cmake
-COPY --from=common /usr/local/lib /usr/local/lib
-COPY --from=common /usr/local/lib/python3.6/dist-packages/ /usr/local/lib/python3.6/dist-packages
+WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends unzip && \
+    mkdir static && \
+    wget -q --show-progress https://github.com/twbs/bootstrap/releases/download/v4.0.0/bootstrap-4.0.0-dist.zip && \
+    unzip bootstrap-4.0.0-dist.zip -d static && \
+    rm -rf bootstrap-4.0.0-dist.zip && \
+    wget -q --show-progress https://code.jquery.com/jquery-3.4.1.min.js && \
+    mv jquery-3.4.1.min.js static/js/jquery.min.js && \
+    rm -rf /var/lib/apt/lists/*
+
+ARG ARTIFACTS
+
+COPY requirements.txt .
+RUN pip3 install --user -r requirements.txt
 
 COPY . .
 
-HEALTHCHECK NONE
+FROM ubuntu:${UBUNTU_IMAGE_VERSION} as runtime
 
-ENTRYPOINT ["python3.6", "web_visualizer.py"]
+# Setting python dev env
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends libsm6 \
+                                               libxext6 \
+                                               libfontconfig1 \
+                                               libxrender1 \
+                                               python3.6 \
+                                               python3-distutils && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+ARG EII_UID
+ARG EII_USER_NAME
+RUN adduser --quiet --disabled-password ${EII_USER_NAME}
+
+ARG ARTIFACTS
+ARG CMAKE_INSTALL_PREFIX
+ENV PYTHONPATH $PYTHONPATH:/app/.local/lib/python3.6/site-packages:/app
+COPY --from=common ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib
+COPY --from=common /eii/common/util util
+COPY --from=builder /root/.local/lib .local/lib
+COPY --from=common /root/.local/lib .local/lib
+COPY --from=builder /app .
+
+RUN chown -R ${EII_UID} .local/lib/python3.6
+
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:${CMAKE_INSTALL_PREFIX}/lib
+ENV PATH $PATH:/app/.local/bin
+
+HEALTHCHECK NONE
+ENTRYPOINT ["python3", "web_visualizer.py"]
