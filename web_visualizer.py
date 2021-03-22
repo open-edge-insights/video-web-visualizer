@@ -294,7 +294,7 @@ def main():
 
     if dev_mode:
 
-        APP.run(host='0.0.0.0', port=json_config['dev_port'],
+        APP.run(host='0.0.0.0', port=json_config['dev_port'], # nosec
                 debug=flask_debug, threaded=True)
     else:
         # For Secure Session Cookie
@@ -318,7 +318,7 @@ def main():
         context.load_cert_chain(server_cert_temp.name, server_key_temp.name)
         server_cert_temp.close()
         server_key_temp.close()
-        APP.run(host='0.0.0.0', port=json_config['port'],
+        APP.run(host='0.0.0.0', port=json_config['port'], # nosec
                 debug=flask_debug, threaded=True, ssl_context=context)
 
 
