@@ -10,7 +10,8 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 * Running visualizer as a container from [build](../../build):
 
   ```
-    $ docker-compose up --build ia_web_visualizer
+    $ docker-compose -f docker-compose-build.yml build ia_web_visualizer
+    $ docker-compose up ia_web_visualizer
   ```
 
 * Running Visualizer in Browser
@@ -20,7 +21,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 
   #### DEV mode
     * Goto Browser
-        http://localhost:5001
+        http://< host ip >:5001
 
   #### PROD Mode:
     * copy 'ca_certificate.pem' from 'build/provision/Certificates/ca' to home directory '~/'
@@ -44,7 +45,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
         * Select All CheckBoxes and Click Import Button.
 
     * Now In Browser
-        https://localhost:5000
+        https://< host ip >:5000
 
     * Login Page
         You should use your defined username & password in etcd config.

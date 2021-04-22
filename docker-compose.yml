@@ -39,7 +39,6 @@ services:
     image: ${DOCKER_REGISTRY}ia_web_visualizer:${EII_VERSION}
     container_name: ia_web_visualizer
     hostname: ia_web_visualizer
-    network_mode: host
     restart: unless-stopped
     ipc: "none"
     security_opt:
@@ -51,11 +50,16 @@ services:
       AppName: "WebVisualizer"
       DEV_MODE: ${DEV_MODE}
       PROFILING_MODE: ${PROFILING_MODE}
-      no_proxy: ${eii_no_proxy},${ETCD_HOST}
+      no_proxy: ${ETCD_HOST}
       ETCD_HOST: ${ETCD_HOST}
       ETCD_CLIENT_PORT: ${ETCD_CLIENT_PORT}
       ETCD_PREFIX: ${ETCD_PREFIX}
       CertType: "zmq,pem"
+    networks:
+      - eii
+    ports:
+      - 5000:5000
+      - 5001:5001
     volumes:
       - "vol_eii_socket:${SOCKET_DIR}"
       - "vol_temp_webv:/var/tmp"
