@@ -33,8 +33,8 @@ services:
         EII_UID: ${EII_UID}
         EII_USER_NAME: ${EII_USER_NAME}
         DOCKER_REGISTRY: ${DOCKER_REGISTRY}
-        UBUNTU_IMAGE_VERSION: ${UBUNTU_IMAGE_VERSION}
         CMAKE_INSTALL_PREFIX: ${EII_INSTALL_PATH}
+        OPENVINO_IMAGE_VERSION: ${OPENVINO_IMAGE_VERSION}
     read_only: true
     image: ${DOCKER_REGISTRY}ia_web_visualizer:${EII_VERSION}
     container_name: ia_web_visualizer

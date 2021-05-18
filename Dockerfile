@@ -25,7 +25,7 @@ ARG DOCKER_REGISTRY
 ARG ARTIFACTS="/artifacts"
 ARG EII_UID
 ARG EII_USER_NAME
-ARG UBUNTU_IMAGE_VERSION
+ARG OPENVINO_IMAGE_VERSION
 FROM ${DOCKER_REGISTRY}ia_eiibase:$EII_VERSION as base
 FROM ${DOCKER_REGISTRY}ia_common:$EII_VERSION as common
 
@@ -51,20 +51,8 @@ RUN pip3 install --user -r requirements.txt
 
 COPY . .
 
-FROM ubuntu:${UBUNTU_IMAGE_VERSION} as runtime
-
-# Setting python dev env
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends libsm6 \
-                                               libxext6 \
-                                               libfontconfig1 \
-                                               libgl1-mesa-glx \
-                                               libxrender1 \
-                                               python3-distutils && \
-    rm -rf /var/lib/apt/lists/*
+FROM openvino/ubuntu20_data_runtime:$OPENVINO_IMAGE_VERSION as runtime
+USER root
 
 WORKDIR /app
 
