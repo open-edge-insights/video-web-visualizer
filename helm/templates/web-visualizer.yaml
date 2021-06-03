@@ -60,6 +60,10 @@ spec:
         image: {{ .Values.registry }}ia_web_visualizer:{{ .Values.eii_version }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         volumeMounts:
+        {{- if eq .Values.config.web_visualizer.IPC true}}
+        - name: {{ .Values.volumes.eii_socket.name }}
+          mountPath: {{ .Values.volumes.eii_socket.location }}
+        {{- end }}
         {{ if eq .Values.env.dev_mode false}}
         - name: etcd-certs
           mountPath: /run/secrets/etcd/
@@ -90,8 +94,17 @@ spec:
         {{- $subscriber_port = add $global.Values.config.video_analytics.publish_port  $instance_idx }}
         {{- $instance = add 1 $instance_idx }}
         {{- end }}
+        {{- if eq $global.Values.config.web_visualizer.IPC false}}
         - name: SUBSCRIBER_default{{ $instance }}_ENDPOINT
           value: "{{ $global.Values.config.video_analytics.name }}{{ $instance }}:{{ $subscriber_port }}"
+        - name: SUBSCRIBER_default{{ $instance }}_TYPE
+          value: "zmq_tcp"
+        {{- else }}
+        - name: SUBSCRIBER_default{{ $instance }}_ENDPOINT
+          value: "{{ $global.Values.env.SOCKET_DIR }}"
+        - name: SUBSCRIBER_default{{ $instance }}_TYPE
+          value: "zmq_ipc"
+        {{- end }}
         {{- end }}
         {{ if eq .Values.env.dev_mode false}}
         - name: CONFIGMGR_CACERT
@@ -104,6 +117,11 @@ spec:
 
 
       volumes:
+      {{- if eq .Values.config.web_visualizer.IPC true}}
+      - name: {{ .Values.volumes.eii_socket.name }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.volumes.eii_socket.name }}
+      {{- end }}
       {{ if eq .Values.env.dev_mode false}}
       - name: etcd-certs
         secret:

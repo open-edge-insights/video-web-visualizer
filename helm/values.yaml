@@ -7,3 +7,4 @@ config:
       ext:
         https_port: 30007
         http_port: 30009
+      IPC: false
