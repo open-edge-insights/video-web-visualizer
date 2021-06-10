@@ -60,9 +60,6 @@ spec:
         image: {{ .Values.DOCKER_REGISTRY }}ia_web_visualizer:{{ .Values.EII_VERSION }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
-          {{- if eq .Values.config.web_visualizer.IPC true}}
-          runAsUser: 0
-          {{- end }}
           privileged: true
         volumeMounts:
         {{- if eq .Values.config.web_visualizer.IPC true}}
