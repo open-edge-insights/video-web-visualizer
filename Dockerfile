@@ -25,7 +25,7 @@ ARG DOCKER_REGISTRY
 ARG ARTIFACTS="/artifacts"
 ARG EII_UID
 ARG EII_USER_NAME
-ARG OPENVINO_IMAGE_VERSION
+ARG OPENVINO_IMAGE
 FROM ${DOCKER_REGISTRY}ia_eiibase:$EII_VERSION as base
 FROM ${DOCKER_REGISTRY}ia_common:$EII_VERSION as common
 
@@ -51,7 +51,8 @@ RUN pip3 install --user -r requirements.txt
 
 COPY . .
 
-FROM openvino/ubuntu20_data_runtime:$OPENVINO_IMAGE_VERSION as runtime
+FROM ${OPENVINO_IMAGE} AS runtime
+
 USER root
 
 WORKDIR /app
@@ -76,4 +77,4 @@ ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:${CMAKE_INSTALL_PREFIX}/lib
 ENV PATH $PATH:/app/.local/bin
 USER $EII_USER_NAME
 HEALTHCHECK NONE
-ENTRYPOINT ["python3", "web_visualizer.py"]
+ENTRYPOINT ["./web_visualizer_start.sh"]
