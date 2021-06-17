@@ -32,11 +32,10 @@ services:
         EII_VERSION: ${EII_VERSION}
         EII_UID: ${EII_UID}
         EII_USER_NAME: ${EII_USER_NAME}
-        DOCKER_REGISTRY: ${DOCKER_REGISTRY}
         CMAKE_INSTALL_PREFIX: ${EII_INSTALL_PATH}
         OPENVINO_IMAGE: ${OPENVINO_IMAGE}
     read_only: true
-    image: ${DOCKER_REGISTRY}ia_web_visualizer:${EII_VERSION}
+    image: ${DOCKER_REGISTRY}openedgeinsights/ia_web_visualizer:${EII_VERSION}
     container_name: ia_web_visualizer
     hostname: ia_web_visualizer
     restart: unless-stopped

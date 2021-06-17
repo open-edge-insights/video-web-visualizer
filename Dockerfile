@@ -21,13 +21,12 @@
 # Dockerfile for WebVisualizer
 
 ARG EII_VERSION
-ARG DOCKER_REGISTRY
 ARG ARTIFACTS="/artifacts"
 ARG EII_UID
 ARG EII_USER_NAME
 ARG OPENVINO_IMAGE
-FROM ${DOCKER_REGISTRY}ia_eiibase:$EII_VERSION as base
-FROM ${DOCKER_REGISTRY}ia_common:$EII_VERSION as common
+FROM ia_eiibase:$EII_VERSION as base
+FROM ia_common:$EII_VERSION as common
 
 FROM base as builder
 LABEL description="Web Visualizer Image"
