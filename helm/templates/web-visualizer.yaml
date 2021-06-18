@@ -57,7 +57,7 @@ spec:
     spec:
       containers:
       - name: ia-web-visualizer
-        image: {{ .Values.DOCKER_REGISTRY }}ia_web_visualizer:{{ .Values.EII_VERSION }}
+        image: {{ .Values.DOCKER_REGISTRY }}openedgeinsights/ia_web_visualizer:{{ .Values.EII_VERSION }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           privileged: true
