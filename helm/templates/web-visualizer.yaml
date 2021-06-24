@@ -55,6 +55,10 @@ spec:
       labels:
         app: webvisualizer
     spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
       containers:
       - name: ia-web-visualizer
         image: {{ .Values.DOCKER_REGISTRY }}openedgeinsights/ia_web_visualizer:{{ .Values.EII_VERSION }}
