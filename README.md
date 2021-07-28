@@ -11,11 +11,11 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 ## Steps to build and run web visualizer
 
 Please go through the below sections to have web visualizer service built and launch it:
-- [../README.md#generate-deployment-and-configuration-files](../README.md#generate-deployment-and-configuration-files)
-- [../README.md#provision](../README.md#provision)
-- [../README.md#build-and-run-eii-videotimeseries-use-cases](../README.md#build-and-run-eii-videotimeseries-use-cases)
+- [../README.md#generate-deployment-and-configuration-files](https://github.com/open-edge-insights/eii-core/blob/master/README.md#generate-deployment-and-configuration-files)
+- [../README.md#provision](https://github.com/open-edge-insights/eii-core/blob/master/README.md#provision)
+- [../README.md#build-and-run-eii-videotimeseries-use-cases](https://github.com/open-edge-insights/eii-core/blob/master/README.md#build-and-run-eii-videotimeseries-use-cases)
 
-For more details, refer [EII core README](../README.md)
+For more details, refer [EII core README](https://github.com/open-edge-insights/eii-core/blob/master/README.md)
 
 * Running Visualizer in Browser
 
@@ -60,7 +60,7 @@ For more details, refer [EII core README](../README.md)
 
 ## Using Labels
 
-  In order to have the web visualizer label each of the defects on the image, labels in JSON format(with mapping between topic subscribed text to be displayed) has to be provided in [config.json](./config.json) file and run the [builder.py](../build/builder.py) script using the below command.
+  In order to have the web visualizer label each of the defects on the image, labels in JSON format(with mapping between topic subscribed text to be displayed) has to be provided in [config.json](./config.json) file and run the [builder.py](https://github.com/open-edge-insights/eii-core/blob/master/build/builder.py) script using the below command.
   ```sh
   $ python3 builder.py
   ```
