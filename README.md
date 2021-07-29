@@ -1,10 +1,10 @@
 **Contents**
 
-- [`Web Visualizer Module`](#web-visualizer-module)
+- [Web Visualizer Module](#web-visualizer-module)
   - [Steps to build and run web visualizer](#steps-to-build-and-run-web-visualizer)
   - [Using Labels](#using-labels)
     - [Metadata Structure](#metadata-structure)
-# `Web Visualizer Module`
+# Web Visualizer Module
 
 Web Visualizer ia a web based app to view the classified images/metadata coming out of EII.
 
