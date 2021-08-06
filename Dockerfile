@@ -21,41 +21,59 @@
 # Dockerfile for WebVisualizer
 
 ARG EII_VERSION
-ARG DOCKER_REGISTRY
-FROM ${DOCKER_REGISTRY}ia_eiibase:$EII_VERSION as eiibase
+ARG ARTIFACTS="/artifacts"
+ARG EII_UID
+ARG EII_USER_NAME
+ARG OPENVINO_IMAGE
+FROM ia_eiibase:$EII_VERSION as base
+FROM ia_common:$EII_VERSION as common
+
+FROM base as builder
 LABEL description="Web Visualizer Image"
 
-WORKDIR ${PY_WORK_DIR}
+WORKDIR /app
 
 RUN apt-get update && \
-    apt-get install -y unzip && \
+    apt-get install -y --no-install-recommends unzip && \
     mkdir static && \
-    wget https://github.com/twbs/bootstrap/releases/download/v4.0.0/bootstrap-4.0.0-dist.zip && \
+    wget -q --show-progress https://github.com/twbs/bootstrap/releases/download/v4.0.0/bootstrap-4.0.0-dist.zip && \
     unzip bootstrap-4.0.0-dist.zip -d static && \
-    wget https://code.jquery.com/jquery-3.4.1.min.js && \
-    cp jquery-3.4.1.min.js static/js/jquery.min.js
+    rm -rf bootstrap-4.0.0-dist.zip && \
+    wget -q --show-progress https://code.jquery.com/jquery-3.4.1.min.js && \
+    mv jquery-3.4.1.min.js static/js/jquery.min.js && \
+    rm -rf /var/lib/apt/lists/*
+
+ARG ARTIFACTS
 
 COPY requirements.txt .
-RUN pip3 install -r requirements.txt
-
-ARG EII_USER_NAME
-RUN adduser --quiet --disabled-password ${EII_USER_NAME}
-
-ENV PYTHONPATH ${PY_WORK_DIR}/
-
-FROM ${DOCKER_REGISTRY}ia_common:$EII_VERSION as common
-
-FROM eiibase
-
-COPY --from=common ${GO_WORK_DIR}/common/libs ${PY_WORK_DIR}/libs
-COPY --from=common ${GO_WORK_DIR}/common/util ${PY_WORK_DIR}/util
-COPY --from=common ${GO_WORK_DIR}/common/cmake ${PY_WORK_DIR}/common/cmake
-COPY --from=common /usr/local/lib /usr/local/lib
-COPY --from=common /usr/local/lib/python3.6/dist-packages/ /usr/local/lib/python3.6/dist-packages
-
+RUN pip3 install --user -r requirements.txt
 
 COPY . .
 
-HEALTHCHECK NONE
+FROM ${OPENVINO_IMAGE} AS runtime
 
-ENTRYPOINT ["python3.6", "web_visualizer.py"]
+USER root
+
+WORKDIR /app
+
+ARG EII_UID
+ARG EII_USER_NAME
+RUN groupadd $EII_USER_NAME -g $EII_UID && \
+    useradd -r -u $EII_UID -g $EII_USER_NAME $EII_USER_NAME
+
+ARG ARTIFACTS
+ARG CMAKE_INSTALL_PREFIX
+ENV PYTHONPATH $PYTHONPATH:/app/.local/lib/python3.8/site-packages:/app
+COPY --from=common ${CMAKE_INSTALL_PREFIX}/lib ${CMAKE_INSTALL_PREFIX}/lib
+COPY --from=common /eii/common/util util
+COPY --from=builder /root/.local/lib .local/lib
+COPY --from=common /root/.local/lib .local/lib
+COPY --from=builder /app .
+
+RUN chown -R ${EII_UID} .local/lib/python3.8
+
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:${CMAKE_INSTALL_PREFIX}/lib
+ENV PATH $PATH:/app/.local/bin
+USER $EII_USER_NAME
+HEALTHCHECK NONE
+ENTRYPOINT ["./web_visualizer_start.sh"]

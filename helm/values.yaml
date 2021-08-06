@@ -1,0 +1,10 @@
+config:
+    web_visualizer:
+      name: webvisualizer
+      int:
+        https_port: 5000
+        http_port: 5001
+      ext:
+        https_port: 30007
+        http_port: 30009
+      IPC: false

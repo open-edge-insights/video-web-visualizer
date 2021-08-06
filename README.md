@@ -1,40 +1,44 @@
-# Intel Edge Insights Web Visualizer
+**Contents**
+
+- [Web Visualizer Module](#web-visualizer-module)
+  - [Steps to build and run web visualizer](#steps-to-build-and-run-web-visualizer)
+  - [Using Labels](#using-labels)
+    - [Metadata Structure](#metadata-structure)
+# Web Visualizer Module
+
 Web Visualizer ia a web based app to view the classified images/metadata coming out of EII.
 
+## Steps to build and run web visualizer
 
-#### Steps to build and run web viualizer
+Please go through the below sections to have web visualizer service built and launch it:
+- [../README.md#generate-deployment-and-configuration-files](https://github.com/open-edge-insights/eii-core/blob/master/README.md#generate-deployment-and-configuration-files)
+- [../README.md#provision](https://github.com/open-edge-insights/eii-core/blob/master/README.md#provision)
+- [../README.md#build-and-run-eii-videotimeseries-use-cases](https://github.com/open-edge-insights/eii-core/blob/master/README.md#build-and-run-eii-videotimeseries-use-cases)
 
-* Follow [provision/README.md](../README#provision-eii.md) for EII provisioning
-  if not done already as part of EII stack setup
-
-* Running visualizer as a container from [build](../../build):
-
-  ```
-    $ docker-compose up --build ia_web_visualizer
-  ```
+For more details, refer [EII core README](https://github.com/open-edge-insights/eii-core/blob/master/README.md)
 
 * Running Visualizer in Browser
 
-  * Visualizer is tested on Chrome Browser. Its better to use chrome browser.
-  * WebVisualizer Currently supports Only **6** parallel streams in the chrome browser per instance.
-
-  #### DEV mode
+  * Visualizer is tested on chrome browser, so its better to use chrome browser.
+  * WebVisualizer currently supports only **6** parallel streams in the chrome
+    browser per instance.
+  * Running in DEV mode:
     * Goto Browser
-        http://localhost:5001
+        http://< host ip >:5001
+  * Running in PROD mode:
+    * copy 'ca_certificate.pem' from 'build/provision/Certificates/ca' to home 
+      directory '~/' and give appropriate permissions to it as shown below:
 
-  #### PROD Mode:
-    * copy 'ca_certificate.pem' from 'build/provision/Certificates/ca' to home directory '~/'
-      and give appropriate permissions to it as shown below:
+      ```sh
+          $ sudo cp Certificates/ca/ca_certificate.pem ~
+          $ cd ~
+          $ sudo chmod 0755 ~/ca_certificate.pem
+      ```
 
-    ```
-        $ sudo cp Certificates/ca/ca_certificate.pem ~
-        $ cd ~
-        $ sudo chmod 0755 ~/ca_certificate.pem
-    ```
+    * Import 'ca_certificate.pem' from home Directory '~/' to your Browser
+      Certificates.
 
-    * Import 'ca_certificate.pem' from home Directory '~/' to your Browser Certifcates.
-
-      ##### Steps to Import Certificates
+      **Steps to Import Certificates**
         * Goto *Settings* in Chrome
         * Search *Manage Certificates* Under Privacy & Security
         * Select Manage Certificates Option
@@ -44,7 +48,7 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
         * Select All CheckBoxes and Click Import Button.
 
     * Now In Browser
-        https://localhost:5000
+        https://< host ip >:5000
 
     * Login Page
         You should use your defined username & password in etcd config.
@@ -54,11 +58,11 @@ Web Visualizer ia a web based app to view the classified images/metadata coming 
 2. Please clear your `browsers cache` while switching from `prod` mode to `dev` mode on running 
 `WebVisualizer` in browser.
 
-#### Using Labels
+## Using Labels
 
-  In order to have the web visualizer label each of the defects on the image, labels in JSON format(with mapping between topic subscribed text to be displayed) has to be provided in [config.json](./config.json) file and run the [eii_builder.py](../build/eii_builder.py) script using the below command.
+  In order to have the web visualizer label each of the defects on the image, labels in JSON format(with mapping between topic subscribed text to be displayed) has to be provided in [config.json](./config.json) file and run the [builder.py](https://github.com/open-edge-insights/eii-core/blob/master/build/builder.py) script using the below command.
   ```sh
-  $ python3 eii_builder.py
+  $ python3 builder.py
   ```
 
   An example of what this JSON value should look like is shown below. In this case
@@ -118,20 +122,20 @@ A) For Ingestor's **Non-GVA** type, metadata structure sample is :
 
 ```json
 {
- 'channels': 3,
- 'encoding_type': 'jpeg',
- 'height': 1200,
+ "channels": 3,
+ "encoding_type": "jpeg",
+ "height": 1200,
 
- 'defects': [
-     {'type': 0, 'tl': [1019, 644], 'br': [1063, 700]},
-     {'type': 0, 'tl': [1297, 758], 'br': [1349, 796]}
+ "defects": [
+     {"type": 0, "tl": [1019, 644], "br": [1063, 700]},
+     {"type": 0, "tl": [1297, 758], "br": [1349, 796]}
     ],
 
-'display_info': [{'info':'good', 'priority':0}],
+"display_info": [{"info":"good", "priority":0}],
 
-'img_handle': '348151d424',
-'width': 1920,
-'encoding_level': 95
+"img_handle": "348151d424",
+"width": 1920,
+"encoding_level": 95
 }
 ```
 
@@ -154,20 +158,19 @@ B) For Ingestor's **GVA** type, metadata structure sample is :
 
 ```json
 {
-    'channels': 3,
-    'gva_meta': [
+    "channels": 3,
+    "gva_meta": [
 
-        {'x': 1047, 'height': 86, 'y': 387, 'width': 105, 'tensor': [{'label': '', 'label_id': 1, 'confidence':0.8094226121902466, 'attribute':'detection'}]},
+        {"x": 1047, "height": 86, "y": 387, "width": 105, "tensor": [{"label": "", "label_id": 1, "confidence":0.8094226121902466, "attribute":"detection"}]},
 
-        {'x': 1009, 'height': 341, 'y': 530, 'width': 176, 'tensor': [{'label': '', 'label_id': 2, 'confidence': 0.9699158668518066, 'attribute': 'detection'}]}
+        {"x": 1009, "height": 341, "y": 530, "width": 176, "tensor": [{"label": "", "label_id": 2, "confidence": 0.9699158668518066, "attribute": "detection"}]}
 
         ],
-
-    'encoding_type': 'jpeg',
-    'height': 1080,
-    'img_handle': '7247149a0d',
-    'width': 1920,
-    'encoding_level': 95
+    "encoding_type": "jpeg",
+    "height": 1080,
+    "img_handle": "7247149a0d",
+    "width": 1920,
+    "encoding_level": 95
 }
 
 ```

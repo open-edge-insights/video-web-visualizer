@@ -78,7 +78,7 @@ def msg_bus_subscriber(topic_name, logger, json_config):
 
         if topic_name == topic:
             callback_thread = threading.Thread(target=visualizer.callback,
-                                            args=(msgbus_cfg, topic, ))
+                                               args=(msgbus_cfg, topic, ))
             callback_thread.start()
             break
 
@@ -147,7 +147,6 @@ def set_header_tags(response):
                                                     includeSubDomains'
     response.headers['Content-Type'] = 'text/html; charset=utf-8'
     return response
-
 
 
 @APP.route('/')
@@ -268,11 +267,11 @@ def main():
 
     json_config = ctx.get_app_config()
 
-
     # Validating config against schema
     with open('./schema.json', "rb") as infile:
         schema = infile.read()
-        if (Util.validate_json(schema, json.dumps(json_config.get_dict()))) is not True:
+        if not (Util.validate_json(schema,
+                                   json.dumps(json_config.get_dict()))):
             sys.exit(1)
 
     num_of_subscribers = ctx.get_num_subscribers()
@@ -294,7 +293,7 @@ def main():
 
     if dev_mode:
 
-        APP.run(host='0.0.0.0', port=json_config['dev_port'], # nosec
+        APP.run(host='0.0.0.0', port=json_config['dev_port'],
                 debug=flask_debug, threaded=True)
     else:
         # For Secure Session Cookie
