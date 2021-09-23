@@ -69,6 +69,8 @@ COPY --from=common /eii/common/util util
 COPY --from=builder /root/.local/lib .local/lib
 COPY --from=common /root/.local/lib .local/lib
 COPY --from=builder /app .
+RUN chown -R ${EII_UID}:${EII_UID} /var/tmp && \
+    chmod -R 760 /var/tmp
 
 RUN chown -R ${EII_UID} .local/lib/python3.8
 
