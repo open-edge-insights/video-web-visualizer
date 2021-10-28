@@ -56,6 +56,10 @@ COPY --from=common /usr/local/lib/python3.6/dist-packages/ /usr/local/lib/python
 
 COPY . .
 
+ARG EII_UID
+RUN chown -R ${EII_UID}:${EII_UID} /var/tmp && \
+    chmod -R 760 /var/tmp
+
 HEALTHCHECK NONE
 
 ENTRYPOINT ["python3.6", "web_visualizer.py"]
