@@ -22,7 +22,7 @@
 
 ARG EII_VERSION
 ARG DOCKER_REGISTRY
-FROM ${DOCKER_REGISTRY}ia_eiibase:$EII_VERSION as eiibase
+FROM ${DOCKER_REGISTRY}ia_openvino_base:$EII_VERSION as openvino
 LABEL description="Web Visualizer Image"
 
 WORKDIR ${PY_WORK_DIR}
@@ -45,7 +45,7 @@ ENV PYTHONPATH ${PY_WORK_DIR}/
 
 FROM ${DOCKER_REGISTRY}ia_common:$EII_VERSION as common
 
-FROM eiibase
+FROM openvino
 
 COPY --from=common ${GO_WORK_DIR}/common/libs ${PY_WORK_DIR}/libs
 COPY --from=common ${GO_WORK_DIR}/common/util ${PY_WORK_DIR}/util
@@ -62,4 +62,4 @@ RUN chown -R ${EII_UID}:${EII_UID} /var/tmp && \
 
 HEALTHCHECK NONE
 
-ENTRYPOINT ["python3.6", "web_visualizer.py"]
+ENTRYPOINT ["./web_visualizer_start.sh"]
