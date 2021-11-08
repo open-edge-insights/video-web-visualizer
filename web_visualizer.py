@@ -111,7 +111,7 @@ def get_image_data(topic_name):
         while True:
             if topic_name in queue_dict.keys():
                 if not queue_dict[topic_name].empty():
-                    frame = queue_dict[topic_name].get_nowait()
+                    frame = queue_dict[topic_name].get()
                     ret, jpeg = cv2.imencode('.jpg', frame)
                     del frame
                     final_image = jpeg.tobytes()
