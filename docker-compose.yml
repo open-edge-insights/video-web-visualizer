@@ -25,6 +25,7 @@ services:
   ia_web_visualizer:
     depends_on:
       - ia_common
+      - ia_openvino_base
     build:
       context: $PWD/../WebVisualizer
       dockerfile: $PWD/../WebVisualizer/Dockerfile
