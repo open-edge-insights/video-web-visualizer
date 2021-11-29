@@ -54,6 +54,8 @@ FROM ${OPENVINO_IMAGE} AS runtime
 
 USER root
 
+RUN apt-get update && apt-get install -y --no-install-recommends libcjson1 libzmq5
+
 WORKDIR /app
 
 ARG EII_UID
