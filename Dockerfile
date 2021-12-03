@@ -54,7 +54,7 @@ FROM ${OPENVINO_IMAGE} AS runtime
 
 USER root
 
-RUN apt-get update && apt-get install -y --no-install-recommends libcjson1 libzmq5
+RUN apt-get update && apt-get install -y --no-install-recommends libcjson1 libzmq5 zlib1g
 
 WORKDIR /app
 
