@@ -149,19 +149,29 @@ def set_header_tags(response):
     return response
 
 
+def check_login(redirect_page = None):
+    if not session.get('logged_in'):
+        dev_mode = ctx.is_dev_mode()
+        if dev_mode:
+            session['logged_in'] = True
+            if redirect_page:
+                response = APP.make_response(render_template(redirect_page,
+                                                         nonce=NONCE))
+                return set_header_tags(response)
+        else:
+            response = APP.make_response(render_template('login.html',
+                                                     nonce=NONCE))
+            return set_header_tags(response)
+    return None
+
+
 @APP.route('/')
 def index():
     """Video streaming home page."""
-    dev_mode = ctx.is_dev_mode()
-    if not session.get('logged_in'):
-        if dev_mode:
-            session['logged_in'] = True
-            response = APP.make_response(render_template('index.html',
-                                                         nonce=NONCE))
-            return set_header_tags(response)
-        response = APP.make_response(render_template('login.html',
-                                                     nonce=NONCE))
-        return set_header_tags(response)
+
+    tags = check_login('index.html')
+    if tags:
+        return tags
 
     response = APP.make_response(render_template('index.html',
                                                  nonce=NONCE))
@@ -172,10 +182,9 @@ def index():
 def return_topics():
     """Returns topics list over http
     """
-    if not session.get('logged_in'):
-        response = APP.make_response(render_template('login.html',
-                                                     nonce=NONCE))
-        return set_header_tags(response)
+    tags = check_login()
+    if tags:
+        return tags
 
     return Response(str(topics_list))
 
@@ -184,12 +193,11 @@ def return_topics():
 def render_image(topic_name):
     """Renders images over http
     """
-    if topic_name in topics_list:
-        if not session.get('logged_in'):
-            response = APP.make_response(render_template('login.html',
-                                                         nonce=NONCE))
-            return set_header_tags(response)
+    tags = check_login()
+    if tags:
+        return tags
 
+    if topic_name in topics_list:
         return Response(get_image_data(topic_name),
                         mimetype='multipart/x-mixed-replace;\
                                   boundary=frame')
