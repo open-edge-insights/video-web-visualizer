@@ -19,25 +19,25 @@ Please go through the below sections to have web visualizer service built and la
 
 For more details, refer [EII core README](https://github.com/open-edge-insights/eii-core/blob/master/README.md)
 
-- Running Visualizer in Browser
+- Running WebVisualizer in Browser
 
-  - Visualizer is tested on chrome browser, so its better to use chrome browser.
+  - WebVisualizer is tested on chrome browser, so its better to use chrome browser.
   - WebVisualizer currently supports only **6** parallel streams in the chrome
     browser per instance.
   - Running in DEV mode:
     - Goto Browser
         http://< host ip >:5001
   - Running in PROD mode:
-    - copy 'ca_certificate.pem' from 'build/provision/Certificates/ca' to home
+    - copy 'cacert.pem' from 'build/Certificates/rootca' to home
       directory '~/' and give appropriate permissions to it as shown below:
 
       ```sh
-          sudo cp Certificates/ca/ca_certificate.pem ~
+          sudo cp Certificates/rootca/cacert.pem ~
           cd ~
-          sudo chmod 0755 ~/ca_certificate.pem
+          sudo chmod 0755 ~/cacert.pem
       ```
 
-    - Import 'ca_certificate.pem' from home Directory '~/' to your Browser
+    - Import 'cacert.pem' from home Directory '~/' to your Browser
       Certificates.
 
       **Steps to Import Certificates**
@@ -46,7 +46,7 @@ For more details, refer [EII core README](https://github.com/open-edge-insights/
       - Select Manage Certificates Option
       - Under *Authorities* Tab Click Import Button
       - With Import Wizard navigate to home directory
-      - Select *ca_certificate.pem* file
+      - Select *cacert.pem* file
       - Select All CheckBoxes and Click Import Button.
 
     - Now In Browser
