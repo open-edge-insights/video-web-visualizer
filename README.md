@@ -28,12 +28,11 @@ For more details, refer [EII core README](https://github.com/open-edge-insights/
     - Goto Browser
         http://< host ip >:5001
   - Running in PROD mode:
-    - copy 'cacert.pem' from 'build/Certificates/rootca' to home
+    - copy 'cacert.pem' from '[WORK_DIR]/IEdgeInsights/build/Certificates/rootca' to home
       directory '~/' and give appropriate permissions to it as shown below:
 
       ```sh
-          sudo cp Certificates/rootca/cacert.pem ~
-          cd ~
+          sudo cp [WORK_DIR]/IEdgeInsights/build/Certificates/rootca/cacert.pem ~
           sudo chmod 0755 ~/cacert.pem
       ```
 
