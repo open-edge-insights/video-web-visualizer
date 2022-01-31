@@ -39,8 +39,8 @@ RUN apt-get update && \
     wget -q --show-progress https://github.com/twbs/bootstrap/releases/download/v4.0.0/bootstrap-4.0.0-dist.zip && \
     unzip bootstrap-4.0.0-dist.zip -d static && \
     rm -rf bootstrap-4.0.0-dist.zip && \
-    wget -q --show-progress https://code.jquery.com/jquery-3.4.1.min.js && \
-    mv jquery-3.4.1.min.js static/js/jquery.min.js && \
+    wget -q --show-progress https://code.jquery.com/jquery-3.6.0.min.js && \
+    mv jquery-3.6.0.min.js static/js/jquery.min.js && \
     rm -rf /var/lib/apt/lists/*
 
 ARG ARTIFACTS
