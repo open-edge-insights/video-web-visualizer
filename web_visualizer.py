@@ -149,18 +149,18 @@ def set_header_tags(response):
     return response
 
 
-def check_login(redirect_page = None):
+def check_login(redirect_page=None):
     if not session.get('logged_in'):
         dev_mode = ctx.is_dev_mode()
         if dev_mode:
             session['logged_in'] = True
             if redirect_page:
                 response = APP.make_response(render_template(redirect_page,
-                                                         nonce=NONCE))
+                                                             nonce=NONCE))
                 return set_header_tags(response)
         else:
             response = APP.make_response(render_template('login.html',
-                                                     nonce=NONCE))
+                                                         nonce=NONCE))
             return set_header_tags(response)
     return None
 
@@ -325,7 +325,7 @@ def main():
         context.load_cert_chain(server_cert_temp.name, server_key_temp.name)
         server_cert_temp.close()
         server_key_temp.close()
-        APP.run(host='0.0.0.0', port=json_config['port'], # nosec
+        APP.run(host='0.0.0.0', port=json_config['port'],  # nosec
                 debug=flask_debug, threaded=True, ssl_context=context)
 
 
