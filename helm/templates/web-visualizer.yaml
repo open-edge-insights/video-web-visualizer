@@ -82,6 +82,10 @@ spec:
           value: '{{ .Values.env.DEV_MODE }}'
         - name: PROFILING_MODE
           value: '{{ .Values.env.PROFILING_MODE }}'
+        - name: WEBVISUALIZER_USERNAME
+          value: '{{ .Values.env.WEBVISUALIZER_USERNAME }}'
+        - name: WEBVISUALIZER_PASSWORD
+          value: '{{ .Values.env.WEBVISUALIZER_PASSWORD }}'
         - name: ETCD_HOST
           value: {{ .Values.config.etcd.name }}
         - name: ETCD_CLIENT_PORT

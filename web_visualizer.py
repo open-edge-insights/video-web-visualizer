@@ -226,8 +226,8 @@ def login():
         if dev_mode:
             session['logged_in'] = True
         else:
-            if request.form['username'] == json_config['username'] \
-               and request.form['password'] == json_config['password']:
+            if request.form['username'] == os.environ["WEBVISUALIZER_USERNAME"] \
+               and request.form['password'] == os.environ["WEBVISUALIZER_PASSWORD"]:
                 session['logged_in'] = True
                 NUMBER_OF_LOGIN_ATTEMPTS = 0
                 return index()
