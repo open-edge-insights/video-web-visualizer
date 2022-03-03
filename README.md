@@ -85,8 +85,6 @@ For more details, refer [EII core README](https://github.com/open-edge-insights/
 
   ```json
 "/WebVisualizer/config": {
-        "username": "admin",
-        "password": "admin@123",
         "dev_port": 5001,
         "port": 5000,
         "labels" : {
