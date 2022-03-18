@@ -1,15 +1,18 @@
-**Contents**
+# Contents
 
-- [Web Visualizer Module](#web-visualizer-module)
-  - [Steps to build and run web visualizer](#steps-to-build-and-run-web-visualizer)
-  - [Using Labels](#using-labels)
-    - [Metadata Structure](#metadata-structure)
+- [Contents](#contents)
+  - [Web Visualizer Module](#web-visualizer-module)
+    - [Steps to build and run web visualizer](#steps-to-build-and-run-web-visualizer)
+    - [Using Labels](#using-labels)
+      - [Metadata Structure](#metadata-structure)
 
-# Web Visualizer Module
+## Web Visualizer Module
 
-Web Visualizer ia a web based app to view the classified images/metadata coming out of EII.
+Web Visualizer ia a web based app to view the classified images/metadata coming out of OEI.
 
-## Steps to build and run web visualizer
+>**Note:** In this document, you will find labels of 'Edge Insights for Industrial (EII)' for filenames, paths, code snippets, and so on. Consider the references of EII as Open Edge Insights (OEI). This is due to the product name change of EII as OEI.
+
+### Steps to build and run web visualizer
 
 Please go through the below sections to have web visualizer service built and launch it:
 
@@ -17,7 +20,7 @@ Please go through the below sections to have web visualizer service built and la
 - [../README.md#provision](https://github.com/open-edge-insights/eii-core/blob/master/README.md#provision)
 - [../README.md#build-and-run-eii-videotimeseries-use-cases](https://github.com/open-edge-insights/eii-core/blob/master/README.md#build-and-run-eii-videotimeseries-use-cases)
 
-For more details, refer [EII core README](https://github.com/open-edge-insights/eii-core/blob/master/README.md)
+For more details, refer [OEI core README](https://github.com/open-edge-insights/eii-core/blob/master/README.md)
 
 - Running WebVisualizer in Browser
 
@@ -61,7 +64,7 @@ For more details, refer [EII core README](https://github.com/open-edge-insights/
 > 2. Please clear your `browsers cache` while switching from `prod` mode to `dev` mode on running
 `WebVisualizer` in browser.
 
-## Using Labels
+### Using Labels
 
   In order to have the web visualizer label each of the defects on the image, labels in JSON format(with mapping between topic subscribed text to be displayed) has to be provided in [config.json](./config.json) file and run the [builder.py](https://github.com/open-edge-insights/eii-core/blob/master/build/builder.py) script using the below command.
 
@@ -116,10 +119,10 @@ For more details, refer [EII core README](https://github.com/open-edge-insights/
     }
 ```
 
-### Metadata Structure
+#### Metadata Structure
 
-EII WebVisualizer app can decode certain types of mete-data formats for drawing the defects on the image.
-Any application wanting to use EII WebVisualizer need to comply with the meta-data format as described below:
+OEI WebVisualizer app can decode certain types of mete-data formats for drawing the defects on the image.
+Any application wanting to use OEI WebVisualizer need to comply with the meta-data format as described below:
 
 A) For Ingestor's **Non-GVA** type, metadata structure sample is :
 
@@ -183,13 +186,11 @@ B) For Ingestor's **GVA** type, metadata structure sample is :
 where in `gva_meta` is a list of dicts.
 
 >**NOTE:**
-
+>
 > 1. Any data with in the list, tuple or dict of meta data should be of primitive data type (int, float, string, bool). Refer the examples given above.
-
 > 2. If user needs to remove the bounding box:
-
      Set the value of draw_results in config.json as false for both Visualiser and WebVisualiser.
 
-     ```
+     ```sh
      draw_results: "false"
      ```
