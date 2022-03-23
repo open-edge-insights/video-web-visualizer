@@ -63,8 +63,6 @@ spec:
       - name: ia-web-visualizer
         image: {{ .Values.DOCKER_REGISTRY }}openedgeinsights/ia_web_visualizer:{{ .Values.EII_VERSION }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
-        securityContext:
-          privileged: true
         volumeMounts:
         {{- if eq .Values.config.web_visualizer.IPC true}}
         - name: {{ .Values.volumes.eii_socket.name }}
