@@ -1,7 +1,6 @@
 {
     "config": {
-        "username": "admin",
-        "password": "admin@123",
+	"cert_type": ["zmq", "pem"],
         "port": 5000,
         "dev_port": 5001,
         "draw_results": "true",

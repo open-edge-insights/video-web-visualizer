@@ -111,7 +111,7 @@ def get_image_data(topic_name):
         while True:
             if topic_name in queue_dict.keys():
                 if not queue_dict[topic_name].empty():
-                    frame = queue_dict[topic_name].get_nowait()
+                    frame = queue_dict[topic_name].get()
                     ret, jpeg = cv2.imencode('.jpg', frame)
                     del frame
                     final_image = jpeg.tobytes()
@@ -149,19 +149,29 @@ def set_header_tags(response):
     return response
 
 
+def check_login(redirect_page=None):
+    if not session.get('logged_in'):
+        dev_mode = ctx.is_dev_mode()
+        if dev_mode:
+            session['logged_in'] = True
+            if redirect_page:
+                response = APP.make_response(render_template(redirect_page,
+                                                             nonce=NONCE))
+                return set_header_tags(response)
+        else:
+            response = APP.make_response(render_template('login.html',
+                                                         nonce=NONCE))
+            return set_header_tags(response)
+    return None
+
+
 @APP.route('/')
 def index():
     """Video streaming home page."""
-    dev_mode = ctx.is_dev_mode()
-    if not session.get('logged_in'):
-        if dev_mode:
-            session['logged_in'] = True
-            response = APP.make_response(render_template('index.html',
-                                                         nonce=NONCE))
-            return set_header_tags(response)
-        response = APP.make_response(render_template('login.html',
-                                                     nonce=NONCE))
-        return set_header_tags(response)
+
+    tags = check_login('index.html')
+    if tags:
+        return tags
 
     response = APP.make_response(render_template('index.html',
                                                  nonce=NONCE))
@@ -172,10 +182,9 @@ def index():
 def return_topics():
     """Returns topics list over http
     """
-    if not session.get('logged_in'):
-        response = APP.make_response(render_template('login.html',
-                                                     nonce=NONCE))
-        return set_header_tags(response)
+    tags = check_login()
+    if tags:
+        return tags
 
     return Response(str(topics_list))
 
@@ -184,12 +193,11 @@ def return_topics():
 def render_image(topic_name):
     """Renders images over http
     """
-    if topic_name in topics_list:
-        if not session.get('logged_in'):
-            response = APP.make_response(render_template('login.html',
-                                                         nonce=NONCE))
-            return set_header_tags(response)
+    tags = check_login()
+    if tags:
+        return tags
 
+    if topic_name in topics_list:
         return Response(get_image_data(topic_name),
                         mimetype='multipart/x-mixed-replace;\
                                   boundary=frame')
@@ -218,8 +226,8 @@ def login():
         if dev_mode:
             session['logged_in'] = True
         else:
-            if request.form['username'] == json_config['username'] \
-               and request.form['password'] == json_config['password']:
+            if request.form['username'] == os.environ["WEBVISUALIZER_USERNAME"] \
+               and request.form['password'] == os.environ["WEBVISUALIZER_PASSWORD"]:
                 session['logged_in'] = True
                 NUMBER_OF_LOGIN_ATTEMPTS = 0
                 return index()
@@ -317,7 +325,7 @@ def main():
         context.load_cert_chain(server_cert_temp.name, server_key_temp.name)
         server_cert_temp.close()
         server_key_temp.close()
-        APP.run(host='0.0.0.0', port=json_config['port'], # nosec
+        APP.run(host='0.0.0.0', port=json_config['port'],  # nosec
                 debug=flask_debug, threaded=True, ssl_context=context)
 
 

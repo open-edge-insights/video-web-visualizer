@@ -2,8 +2,6 @@
   "definitions": {},
   "type": "object",
   "required": [
-    "username",
-    "password",
     "port"
   ],
   "properties": {
